@@ -26,7 +26,7 @@
         <b-dropdown-item aria-role="listitem">Delete</b-dropdown-item>
       </b-dropdown>
       <div class="mb-5">
-        <span class="is-uppercase is-size-7">{{ todoCopy.type }}</span>
+        <span class="is-uppercase is-size-7">{{ todo.type }}</span>
         <div
           class="is-flex is-align-content-center"
           :style="{ color: darkerColor }">
@@ -40,19 +40,19 @@
               todoIsDone ? 'is-step-done' : '',
               'has-text-weight-bold is-size-4',
             ]">
-            {{ todoCopy.title }}
+            {{ todo.title }}
           </h3>
         </div>
-        <span>{{ parseDateRelative(todoCopy.dueDate) }}</span>
+        <span>{{ parseDateRelative(todo.dueDate) }}</span>
       </div>
       <div class="content has-text-weight-semibold">
-        {{ todoCopy.description }}
+        {{ todo.description }}
       </div>
       <TodoStep
-        v-for="(step, index) in todoCopy.steps"
+        v-for="step in todo.steps"
         :key="step.order"
-        :step.sync="step"
-        @update:step="(value) => updateStep(value, index)" />
+        :step="step"
+        @step:update="updateTodoAndFetch" />
     </div>
     <footer
       class="card-footer has-text-weight-semibold"
@@ -75,6 +75,11 @@
           class="pr-2" />
         {{ todoIsDone ? "Completed" : "Mark as complete" }}
       </span>
+      <div
+        class="progress-bar"
+        :style="{ transform: `scaleX(${progressPercent})` }">
+        />
+      </div>
     </footer>
     <b-loading
       v-model="isLoading"
@@ -84,7 +89,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from 'vuex'
+import { mapState, mapActions, mapGetters } from 'vuex'
 import { cloneDeep } from 'lodash'
 import TodoStep from './TodoStep.vue'
 
@@ -93,45 +98,29 @@ export default {
     TodoStep
   },
   props: {
-    todo: {
-      type: Object,
-      default: () => ({
-        id: null,
-        createdAt: null,
-        type: null,
-        color: null,
-        title: null,
-        description: null,
-        steps: [
-          {
-            order: null,
-            text: null,
-            done: null
-          }
-        ],
-        dueDate: null,
-        done: null
-      })
+    id: {
+      type: Number,
+      required: true
     }
   },
   data () {
     return {
-      todoCopy: cloneDeep(this.todo)
+      todo: []
     }
   },
   computed: {
     ...mapState(['loader']),
     isLoading () {
-      return this.loader.status && this.loader.todoId === this.todoCopy.id
+      return this.loader.status && this.loader.todoId === this.todo.id
     },
     lighterColor () {
-      return this.$color(this.todoCopy.color).lighten(0.42)
+      return this.$color(this.todo.color).lighten(0.42)
     },
     darkerColor () {
-      return this.$color(this.todoCopy.color).darken(0.5).desaturate(0.2)
+      return this.$color(this.todo.color).darken(0.5).desaturate(0.2)
     },
     borderColor () {
-      return this.$color(this.todoCopy.color)
+      return this.$color(this.todo.color)
         .darken(0.1)
         .desaturate(0.5)
         .alpha(0.5)
@@ -143,28 +132,30 @@ export default {
     },
     todoIsDone () {
       return (
-        this.todoCopy.done && this.todoCopy.steps.every(({ done }) => done)
+        this.todo.done && this.todo.steps.every(({ done }) => done)
+        // this.todo.done
       )
+    },
+    progressPercent () {
+      const doneSteps = this.todo.steps.filter(({ done }) => done)
+      const allSteps = this.todo.steps
+      return doneSteps.length / allSteps.length
     }
   },
-  watch: {
-    todo: {
-      immediate: true,
-      deep: true,
-      handler (newValue, oldValue) {
-        this.todoCopy = cloneDeep(newValue)
-      }
-    }
+  created () {
+    this.todo = cloneDeep(this.getTodoById()(this.id))
   },
   methods: {
     ...mapActions(['updateTodo']),
+    ...mapGetters(['getTodoById']),
     toggleDone () {
-      this.todoCopy.done = !this.todoCopy.done
-      this.updateTodo(this.todoCopy)
+      this.todo.done = !this.todo.done
+      this.updateTodoAndFetch()
     },
-    updateStep (value, index) {
-      this.todoCopy.steps[index] = value
-      this.updateTodo(this.todoCopy)
+    updateTodoAndFetch () {
+      this.updateTodo(this.todo).then(() => {
+        Object.assign({}, this.todo, this.getTodoById()(this.id))
+      })
     },
     parseDateRelative (date) {
       const diff = Math.abs(this.$dayjs().diff(date, 'day', true))
@@ -209,6 +200,21 @@ export default {
   &:hover
     .actions__icon div
       transform: rotateY(180deg)
+
+.card-footer
+  position: relative
+
+.progress-bar
+  position: absolute
+  top: 0
+  right: 0
+  bottom: 0
+  left: 0
+  background-color: rgb(0 0 0 / 40%)
+  mix-blend-mode: overlay
+  transform: scaleX(0)
+  transform-origin: 0 0
+  transition: transform .2s ease-out
 
 .done-btn
   border-bottom-right-radius: 1em

@@ -53,5 +53,13 @@ export default new Vuex.Store({
       commit('UPDATE_LOADER', { status: false, todoId: todoObj.id })
     }, 1000)
   },
+  getters: {
+    todoIds: state => {
+      return state.todos.map(todo => todo.id)
+    },
+    getTodoById: (state) => (id) => {
+      return state.todos.find(todo => todo.id === id)
+    }
+  },
   modules: {}
 })

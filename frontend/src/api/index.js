@@ -10,7 +10,7 @@ const todos = [
       {
         order: 1,
         text: 'Go to kitchen',
-        done: false
+        done: true
       },
       {
         order: 2,
@@ -49,7 +49,7 @@ export function fetchTodos () {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       resolve(todos)
-    }, 100)
+    }, 3000)
   })
 }
 

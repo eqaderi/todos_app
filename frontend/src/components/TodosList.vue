@@ -1,22 +1,26 @@
 <template>
   <div class="columns is-tablet">
     <div
-      v-for="todo in todos"
-      :key="todo.id"
+      v-for="id in todoIds"
+      :key="id"
       class="column is-6 is-4-desktop is-3-widescreen">
-      <TodoCard :todo="todo" />
+      <TodoCard :id="id" />
     </div>
   </div>
 </template>
 
 <script>
-import { mapState, mapActions } from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
+// import { cloneDeep } from 'lodash'
 import TodoCard from '@/components/TodoCard.vue'
 export default {
   components: {
     TodoCard
   },
-  computed: mapState(['todos']),
+  computed: {
+    // ...mapState(['todos']),
+    ...mapGetters(['todoIds'])
+  },
   beforeMount () {
     this.loadTodos()
   },
