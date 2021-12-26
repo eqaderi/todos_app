@@ -7,13 +7,19 @@ import Color from 'color'
 import dayjs from 'dayjs'
 import calendar from 'dayjs/plugin/calendar'
 import relativeTime from 'dayjs/plugin/relativeTime'
-
-Vue.use(Buefy)
-Vue.prototype.$color = Color
+import { gsap } from 'gsap'
+import { Flip } from 'gsap/Flip'
 
 dayjs.extend(calendar)
 dayjs.extend(relativeTime)
+gsap.registerPlugin(Flip)
+
+Vue.prototype.$color = Color
 Vue.prototype.$dayjs = dayjs
+Vue.prototype.$gsap = gsap
+Vue.prototype.$Flip = Flip
+
+Vue.use(Buefy)
 
 Vue.config.productionTip = false
 

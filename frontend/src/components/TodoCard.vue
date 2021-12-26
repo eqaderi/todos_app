@@ -1,18 +1,43 @@
 <template>
   <div
-    class="card has-text-left is-relative"
+    :ref="`card${id}`"
+    class="card has-text-left"
     :style="{ backgroundColor: lighterColor, boxShadow }">
     <div class="card-content">
       <!-- <b-tooltip
-        class="delete-tooltip"
-        label="Delete this item"
-        type="is-dark">
-        <button class="delete" />
-      </b-tooltip> -->
+        position="is-left"
+        type="is-light"
+        size="is-small"
+        class="actions"
+        :auto-close="['outside', 'escape']">
+        <template v-slot:content>
+          <b-button
+            label="Edit"
+            size="is-small"
+            type="is-light" />
+          <b-button
+            label="Delete"
+            size="is-small"
+            type="is-light" />
+        </template>
 
+        <div class="actions__icon">
+          <div
+            v-for="i in [1, 2, 3]"
+            :key="i" />
+        </div>
+      </b-tooltip> -->
+      <!-- <div class="actions">
+        <b-button
+          type="is-text"
+          icon-left="lead-pencil" />
+        <b-button
+          type="is-text"
+          icon-left="close" />
+      </div> -->
       <b-dropdown
-        :triggers="['hover']"
         aria-role="list"
+        :triggers="['hover']"
         class="actions">
         <template #trigger>
           <div class="actions__icon">
@@ -20,9 +45,17 @@
               v-for="i in [1, 2, 3]"
               :key="i" />
           </div>
+          <!-- <b-icon
+            icon="lead-pencil" />
+          <b-icon
+            icon="delete" /> -->
         </template>
 
-        <b-dropdown-item aria-role="listitem">Edit</b-dropdown-item>
+        <b-dropdown-item
+          aria-role="listitem"
+          @click="() => updateCardPoppedUp({status: true, todoId: id})">
+          Edit
+        </b-dropdown-item>
         <b-dropdown-item aria-role="listitem">Delete</b-dropdown-item>
       </b-dropdown>
       <div class="mb-5">
@@ -109,7 +142,7 @@ export default {
     }
   },
   computed: {
-    ...mapState(['loader']),
+    ...mapState(['loader', 'cardPoppedUp']),
     isLoading () {
       return this.loader.status && this.loader.todoId === this.todo.id
     },
@@ -142,11 +175,23 @@ export default {
       return doneSteps.length / allSteps.length
     }
   },
+  watch: {
+    cardPoppedUp: {
+      deep: true,
+      handler (newValue, oldValue) {
+        console.log('nnn', newValue)
+        this.togglePopUpCard(newValue)
+      }
+    }
+  },
   created () {
     this.todo = cloneDeep(this.getTodoById()(this.id))
   },
+  // mounted () {
+  //   this.cardRef = this.$refs[`card${this.id}`]
+  // },
   methods: {
-    ...mapActions(['updateTodo']),
+    ...mapActions(['updateTodo', 'updateBackdrop', 'updateCardPoppedUp']),
     ...mapGetters(['getTodoById']),
     toggleDone () {
       this.todo.done = !this.todo.done
@@ -168,6 +213,27 @@ export default {
         : this.$dayjs(this.$dayjs(date)).fromNow()
 
       return `Due date is ${parsedDate}`
+    },
+    togglePopUpCard ({ status, todoId }) {
+      if (todoId !== this.id) return
+      const cardRef = this.$refs[`card${todoId}`]
+      console.log(cardRef)
+      const cardFlipState = this.$Flip.getState(cardRef)
+
+      this.updateBackdrop(status)
+      // this.updateCardPoppedUp({status: status, todoId: this.id})
+
+      const cardList = cardRef.classList
+      if (status) {
+        cardList.add('pop-up')
+      } else {
+        cardList.remove('pop-up')
+      }
+
+      this.$Flip.from(cardFlipState, {
+        duration: 0.5,
+        ease: 'power4.out'
+      })
     }
   }
 }
@@ -177,26 +243,39 @@ export default {
 .loading-overlay
   border-radius: 1em
 
+.card
+  position: relative
+  // transition: top 3s, right 3s,bottom 3s,left 3s
+
+.pop-up
+  position: fixed
+  top: 200px
+  left: 200px
+  right: 200px
+  z-index: 10000
+
 .actions
   position: absolute
   display: block
   top: 0
   right: 0
   font-size: initial
-  padding: 1em 1em 1em 2em
+  padding: 0
   cursor: pointer
-  &__icon div
-    height: .25em
-    width: .25em
-    border-radius: .25em
-    background-color: #2c3e50
-    margin-bottom: .25em
-    transform: rotateY(0deg)
-    transition: transform .2s ease-out
-    &:nth-child(2)
-      transition-delay: .1s
-    &:nth-child(3)
-      transition-delay: .2s
+  &__icon
+    padding: 1em
+    div
+      height: .25em
+      width: .25em
+      border-radius: .25em
+      background-color: #2c3e50
+      margin-bottom: .25em
+      transform: rotateY(0deg)
+      transition: transform .2s ease-out
+      &:nth-child(2)
+        transition-delay: .1s
+      &:nth-child(3)
+        transition-delay: .2s
   &:hover
     .actions__icon div
       transform: rotateY(180deg)
@@ -240,4 +319,5 @@ export default {
 .is-done
   &::after
     opacity: 1
+
 </style>

@@ -2,16 +2,22 @@
   <div id="app">
     <Navbar />
     <router-view class="mt-6" />
+    <BackDrop v-if="backdrop" />
   </div>
 </template>
 
 <script>
-// @ is an alias to /src
 import Navbar from '@/components/NavBar.vue'
+import BackDrop from '@/components/BackDrop.vue'
+import { mapState } from 'vuex'
 
 export default {
   components: {
-    Navbar
+    Navbar,
+    BackDrop
+  },
+  computed: {
+    ...mapState(['backdrop'])
   }
 }
 </script>

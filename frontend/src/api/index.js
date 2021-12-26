@@ -49,7 +49,7 @@ export function fetchTodos () {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       resolve(todos)
-    }, 3000)
+    }, 30)
   })
 }
 

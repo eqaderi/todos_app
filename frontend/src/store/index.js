@@ -11,6 +11,11 @@ export default new Vuex.Store({
     loader: {
       status: false,
       todoId: null
+    },
+    backdrop: false,
+    cardPoppedUp: {
+      status: false,
+      todoId: null
     }
   },
   mutations: {
@@ -25,6 +30,13 @@ export default new Vuex.Store({
       const todoId = todo.id
       const index = state.todos.findIndex(({ id }) => +id === +todoId)
       state.todos[index] = todo
+    },
+    SET_BACKDROP (state, status) {
+      state.backdrop = status
+    },
+    SET_CARD_POPPED_UP (state, { status, todoId }) {
+      state.cardPoppedUp.status = status
+      state.cardPoppedUp.todoId = todoId
     }
   },
   actions: {
@@ -51,7 +63,13 @@ export default new Vuex.Store({
       debouncedCommitLoaderUpdate.cancel()
       commit('UPDATE_TODO', { todo })
       commit('UPDATE_LOADER', { status: false, todoId: todoObj.id })
-    }, 1000)
+    }, 1000),
+    updateBackdrop ({ commit }, status) {
+      commit('SET_BACKDROP', status)
+    },
+    updateCardPoppedUp ({ commit }, payload) {
+      commit('SET_CARD_POPPED_UP', payload)
+    }
   },
   getters: {
     todoIds: state => {
