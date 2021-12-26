@@ -10,16 +10,18 @@
 </template>
 
 <script>
+import { mapState, mapActions } from 'vuex'
 import TodoCard from '@/components/TodoCard.vue'
 export default {
   components: {
     TodoCard
   },
-  props: {
-    todos: {
-      type: Array,
-      default: () => []
-    }
+  computed: mapState(['todos']),
+  beforeMount () {
+    this.loadTodos()
+  },
+  methods: {
+    ...mapActions(['loadTodos'])
   }
 }
 </script>

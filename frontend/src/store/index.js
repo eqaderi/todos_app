@@ -24,6 +24,7 @@ export default new Vuex.Store({
     UPDATE_TODO (state, { todo }) {
       const todoId = todo.id
       const index = state.todos.findIndex(({ id }) => +id === +todoId)
+      console.log(todo)
       state.todos[index] = todo
     }
   },
@@ -41,7 +42,6 @@ export default new Vuex.Store({
       commit('UPDATE_LOADER', { status: false, todoId: 'all' })
     },
     updateTodo: debounce(async ({ commit }, todoObj) => {
-      console.log({ todoObj })
       const commitLoaderUpdate = () =>
         commit('UPDATE_LOADER', { status: true, todoId: todoObj.id })
       const debouncedCommitLoaderUpdate = debounce(commitLoaderUpdate, 500)

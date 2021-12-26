@@ -1,30 +1,49 @@
 <template>
   <div class="mb-1">
     <b-checkbox
-      v-model="value.done"
       class="checkbox-is-transparent"
       type="is-light"
+      :value="stepCopy.done"
       @input="value => updateStep(value)">
-      <div :class="[value.done ? 'is-step-done' : '', 'mr-2']">
-        {{ value.order }}. {{ value.text }}
+      <div :class="[stepCopy.done ? 'is-step-done' : '', 'mr-2']">
+        {{ stepCopy.order }}. {{ stepCopy.text }}
       </div>
     </b-checkbox>
   </div>
 </template>
 
 <script>
+import { cloneDeep } from 'lodash'
 export default {
   props: {
-    value: {
+    step: {
       type: Object,
       required: true,
-      default: () => ({})
+      default: () => ({
+        order: null,
+        text: null,
+        done: null
+      })
+    }
+  },
+  data () {
+    return {
+      stepCopy: cloneDeep(this.step)
+    }
+  },
+  watch: {
+    step: {
+      immediate: true,
+      deep: true,
+      handler (newValue, oldValue) {
+        this.stepCopy = cloneDeep(newValue)
+      }
     }
   },
   methods: {
     updateStep (value) {
-      this.value.done = value
-      this.$emit('input', this.value)
+      this.stepCopy.done = value
+      this.$emit('update:step', this.stepCopy)
     }
   }
 }

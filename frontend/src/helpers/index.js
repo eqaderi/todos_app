@@ -44,7 +44,6 @@ export function sm ({
     dbUpdateLoader()
 
     const result = item ? await apiFunction(item) : await apiFunction(item)
-    console.log({ result })
 
     dbUpdateLoader.cancel()
     context.commit(dataMutation, { result })

@@ -10,7 +10,7 @@
         <button class="delete" />
       </b-tooltip>
       <div class="mb-5">
-        <span class="is-uppercase is-size-7">{{ todo.type }}</span>
+        <span class="is-uppercase is-size-7">{{ todoCopy.type }}</span>
         <div
           class="is-flex is-align-content-center"
           :style="{ color: darkerColor }">
@@ -21,16 +21,16 @@
             class="mr-4" />
           <h3
             :class="[ todoIsDone ? 'is-step-done' : '', 'has-text-weight-bold is-size-4']">
-            {{ todo.title }}
+            {{ todoCopy.title }}
           </h3>
         </div>
       </div>
-      <div class="content has-text-weight-semibold">{{ todo.description }}</div>
+      <div class="content has-text-weight-semibold">{{ todoCopy.description }}</div>
       <TodoStep
-        v-for="(step, index) in todo.steps"
+        v-for="(step, index) in todoCopy.steps"
         :key="step.order"
-        :value="todo.steps[index]"
-        @input="value => updateStep(value, index)" />
+        :step.sync="step"
+        @update:step="value => updateStep(value, index)" />
     </div>
     <footer
       class="card-footer has-text-weight-semibold"
@@ -60,6 +60,7 @@
 
 <script>
 import { mapState, mapActions } from 'vuex'
+import { cloneDeep } from 'lodash'
 import TodoStep from './TodoStep.vue'
 
 export default {
@@ -69,22 +70,43 @@ export default {
   props: {
     todo: {
       type: Object,
-      default: () => ({})
+      default: () => ({
+        id: null,
+        createdAt: null,
+        type: null,
+        color: null,
+        title: null,
+        description: null,
+        steps: [
+          {
+            order: null,
+            text: null,
+            done: null
+          }
+        ],
+        dueDate: null,
+        done: null
+      })
+    }
+  },
+  data () {
+    return {
+      todoCopy: cloneDeep(this.todo)
     }
   },
   computed: {
     ...mapState(['loader']),
     isLoading () {
-      return this.loader.status && this.loader.todoId === this.todo.id
+      return this.loader.status && this.loader.todoId === this.todoCopy.id
     },
     lighterColor () {
-      return this.$color(this.todo.color).lighten(0.42)
+      return this.$color(this.todoCopy.color).lighten(0.42)
     },
     darkerColor () {
-      return this.$color(this.todo.color).darken(0.5).desaturate(0.2)
+      return this.$color(this.todoCopy.color).darken(0.5).desaturate(0.2)
     },
     borderColor () {
-      return this.$color(this.todo.color)
+      return this.$color(this.todoCopy.color)
         .darken(0.1)
         .desaturate(0.5)
         .alpha(0.5)
@@ -95,23 +117,27 @@ export default {
       return `${inside}, ${outside}`
     },
     todoIsDone () {
-      return this.todo.done && this.todo.steps.every(({ done }) => done)
-    },
-    model: {
-      get () {
-        return this.todo
+      return this.todoCopy.done && this.todoCopy.steps.every(({ done }) => done)
+    }
+  },
+  watch: {
+    todo: {
+      immediate: true,
+      deep: true,
+      handler (newValue, oldValue) {
+        this.todoCopy = cloneDeep(newValue)
       }
     }
   },
   methods: {
     ...mapActions(['updateTodo']),
     toggleDone () {
-      this.todo.done = !this.todo.done
-      this.updateTodo(this.todo)
+      this.todoCopy.done = !this.todoCopy.done
+      this.updateTodo(this.todoCopy)
     },
     updateStep (value, index) {
-      this.todo.steps[index] = value
-      this.updateTodo(this.todo)
+      this.todoCopy.steps[index] = value
+      this.updateTodo(this.todoCopy)
     },
     boxShadow2 (done) {
       return done ? `inset 0 0 .2em .2em ${this.borderColor.alpha(0.3)}` : ''
