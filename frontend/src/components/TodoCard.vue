@@ -17,7 +17,7 @@
         <template #trigger>
           <div class="actions__icon">
             <div
-              v-for="i in [1,2,3]"
+              v-for="i in [1, 2, 3]"
               :key="i" />
           </div>
         </template>
@@ -36,17 +36,23 @@
             size="is-medium"
             class="mr-4" />
           <h3
-            :class="[ todoIsDone ? 'is-step-done' : '', 'has-text-weight-bold is-size-4']">
+            :class="[
+              todoIsDone ? 'is-step-done' : '',
+              'has-text-weight-bold is-size-4',
+            ]">
             {{ todoCopy.title }}
           </h3>
         </div>
+        <span>{{ parseDateRelative(todoCopy.dueDate) }}</span>
       </div>
-      <div class="content has-text-weight-semibold">{{ todoCopy.description }}</div>
+      <div class="content has-text-weight-semibold">
+        {{ todoCopy.description }}
+      </div>
       <TodoStep
         v-for="(step, index) in todoCopy.steps"
         :key="step.order"
         :step.sync="step"
-        @update:step="value => updateStep(value, index)" />
+        @update:step="(value) => updateStep(value, index)" />
     </div>
     <footer
       class="card-footer has-text-weight-semibold"
@@ -57,14 +63,17 @@
         Edit
       </span> -->
       <span
-        :class="[todoIsDone ? 'is-done' : '', 'card-footer-item is-clickable done-btn is-flex']"
+        :class="[
+          todoIsDone ? 'is-done' : '',
+          'card-footer-item is-clickable done-btn is-flex',
+        ]"
         :style="{ borderColor }"
         @click="toggleDone">
         <b-icon
           v-if="todoIsDone"
           icon="check-all"
           class="pr-2" />
-        {{ todoIsDone ? 'Completed' : 'Mark as complete' }}
+        {{ todoIsDone ? "Completed" : "Mark as complete" }}
       </span>
     </footer>
     <b-loading
@@ -133,7 +142,9 @@ export default {
       return `${inside}, ${outside}`
     },
     todoIsDone () {
-      return this.todoCopy.done && this.todoCopy.steps.every(({ done }) => done)
+      return (
+        this.todoCopy.done && this.todoCopy.steps.every(({ done }) => done)
+      )
     }
   },
   watch: {
@@ -154,6 +165,18 @@ export default {
     updateStep (value, index) {
       this.todoCopy.steps[index] = value
       this.updateTodo(this.todoCopy)
+    },
+    parseDateRelative (date) {
+      const diff = Math.abs(this.$dayjs().diff(date, 'day', true))
+      const differenceIsADayOrMore = diff >= 0.5
+
+      const parsedDate = differenceIsADayOrMore
+        ? this.$dayjs(this.$dayjs(date)).calendar(null, {
+          sameElse: 'MMMM D, YYYY h:mm A'
+        })
+        : this.$dayjs(this.$dayjs(date)).fromNow()
+
+      return `Due date is ${parsedDate}`
     }
   }
 }

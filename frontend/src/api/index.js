@@ -1,7 +1,7 @@
 const todos = [
   {
     id: 1,
-    createdAt: new Date().toJSON(),
+    createdAt: '2021-12-25T13:42:22.000Z',
     type: 'home',
     color: '#53db89',
     title: 'Clean the kitchen',
@@ -18,12 +18,12 @@ const todos = [
         done: false
       }
     ],
-    dueDate: new Date().toJSON(),
+    dueDate: '2021-12-27T14:02:33.000Z',
     done: false
   },
   {
     id: 2,
-    createdAt: new Date().toJSON(),
+    createdAt: '2021-12-26T13:42:22.000Z',
     type: 'work',
     color: '#f98a4b',
     title: 'Wash the car',
@@ -40,7 +40,7 @@ const todos = [
         done: false
       }
     ],
-    dueDate: new Date().toJSON(),
+    dueDate: '2022-01-08T13:12:53.000Z',
     done: false
   }
 ]
