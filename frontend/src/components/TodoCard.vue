@@ -1,41 +1,11 @@
 <template>
   <div
     :ref="`card${id}`"
-    class="card has-text-left"
+    class="card has-text-left todo-item"
     :style="{ backgroundColor: lighterColor, boxShadow }">
     <div class="card-content">
-      <!-- <b-tooltip
-        position="is-left"
-        type="is-light"
-        size="is-small"
-        class="actions"
-        :auto-close="['outside', 'escape']">
-        <template v-slot:content>
-          <b-button
-            label="Edit"
-            size="is-small"
-            type="is-light" />
-          <b-button
-            label="Delete"
-            size="is-small"
-            type="is-light" />
-        </template>
-
-        <div class="actions__icon">
-          <div
-            v-for="i in [1, 2, 3]"
-            :key="i" />
-        </div>
-      </b-tooltip> -->
-      <!-- <div class="actions">
-        <b-button
-          type="is-text"
-          icon-left="lead-pencil" />
-        <b-button
-          type="is-text"
-          icon-left="close" />
-      </div> -->
       <b-dropdown
+        v-show="!cardPoppedUp.status"
         aria-role="list"
         :triggers="['hover']"
         class="actions">
@@ -45,10 +15,6 @@
               v-for="i in [1, 2, 3]"
               :key="i" />
           </div>
-          <!-- <b-icon
-            icon="lead-pencil" />
-          <b-icon
-            icon="delete" /> -->
         </template>
 
         <b-dropdown-item
@@ -90,6 +56,9 @@
     <footer
       class="card-footer has-text-weight-semibold"
       :style="{ borderColor }">
+      <div
+        class="progress-bar"
+        :style="{ transform: `scaleX(${progressPercent})` }" />
       <!-- <span
         class="card-footer-item is-clickable"
         :style="{ borderColor }">
@@ -108,11 +77,6 @@
           class="pr-2" />
         {{ todoIsDone ? "Completed" : "Mark as complete" }}
       </span>
-      <div
-        class="progress-bar"
-        :style="{ transform: `scaleX(${progressPercent})` }">
-        />
-      </div>
     </footer>
     <b-loading
       v-model="isLoading"
@@ -166,7 +130,6 @@ export default {
     todoIsDone () {
       return (
         this.todo.done && this.todo.steps.every(({ done }) => done)
-        // this.todo.done
       )
     },
     progressPercent () {
@@ -178,8 +141,7 @@ export default {
   watch: {
     cardPoppedUp: {
       deep: true,
-      handler (newValue, oldValue) {
-        console.log('nnn', newValue)
+      handler (newValue) {
         this.togglePopUpCard(newValue)
       }
     }
@@ -216,23 +178,29 @@ export default {
     },
     togglePopUpCard ({ status, todoId }) {
       if (todoId !== this.id) return
+
       const cardRef = this.$refs[`card${todoId}`]
-      console.log(cardRef)
       const cardFlipState = this.$Flip.getState(cardRef)
+      const toggleZIndex = () => {
+        cardRef.style.zIndex = status ? 1000 : 'initial'
+        // cardRef.style.position = status ? 'fixed' : 'relative'
+      }
 
       this.updateBackdrop(status)
-      // this.updateCardPoppedUp({status: status, todoId: this.id})
 
-      const cardList = cardRef.classList
+      cardRef.style.zIndex = 1000
+      // cardRef.style.position = 'fixed'
+
       if (status) {
-        cardList.add('pop-up')
+        cardRef.classList.add('pop-up')
       } else {
-        cardList.remove('pop-up')
+        cardRef.classList.remove('pop-up')
       }
 
       this.$Flip.from(cardFlipState, {
         duration: 0.5,
-        ease: 'power4.out'
+        ease: 'power4.out',
+        onComplete: toggleZIndex
       })
     }
   }
@@ -245,14 +213,14 @@ export default {
 
 .card
   position: relative
-  // transition: top 3s, right 3s,bottom 3s,left 3s
 
 .pop-up
   position: fixed
   top: 200px
   left: 200px
   right: 200px
-  z-index: 10000
+  box-shadow: none !important
+  // z-index: 1000
 
 .actions
   position: absolute
@@ -282,6 +250,7 @@ export default {
 
 .card-footer
   position: relative
+  overflow: hidden
 
 .progress-bar
   position: absolute

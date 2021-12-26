@@ -42,6 +42,94 @@ const todos = [
     ],
     dueDate: '2022-01-08T13:12:53.000Z',
     done: false
+  },
+  {
+    id: 3,
+    createdAt: '2021-12-26T13:42:22.000Z',
+    type: 'work',
+    color: '#f94a9b',
+    title: 'Wash the car',
+    description: 'Car is messy, clean it before the trip',
+    steps: [
+      {
+        order: 1,
+        text: 'Go to parking lot',
+        done: false
+      },
+      {
+        order: 2,
+        text: 'Clean the car',
+        done: false
+      }
+    ],
+    dueDate: '2022-01-08T13:12:53.000Z',
+    done: false
+  },
+  {
+    id: 4,
+    createdAt: '2021-12-26T13:42:22.000Z',
+    type: 'work',
+    color: '#d1ea4b',
+    title: 'Wash the car',
+    description: 'Car is messy, clean it before the trip',
+    steps: [
+      {
+        order: 1,
+        text: 'Go to parking lot',
+        done: false
+      },
+      {
+        order: 2,
+        text: 'Clean the car',
+        done: false
+      }
+    ],
+    dueDate: '2022-01-08T13:12:53.000Z',
+    done: false
+  },
+  {
+    id: 5,
+    createdAt: '2021-12-26T13:42:22.000Z',
+    type: 'work',
+    color: '#f98acb',
+    title: 'Wash the car',
+    description: 'Car is messy, clean it before the trip',
+    steps: [
+      {
+        order: 1,
+        text: 'Go to parking lot',
+        done: false
+      },
+      {
+        order: 2,
+        text: 'Clean the car',
+        done: false
+      }
+    ],
+    dueDate: '2022-01-08T13:12:53.000Z',
+    done: false
+  },
+  {
+    id: 6,
+    createdAt: '2021-12-26T13:42:22.000Z',
+    type: 'work',
+    color: '#098afb',
+    title: 'Wash the car',
+    description: 'Car is messy, clean it before the trip',
+    steps: [
+      {
+        order: 1,
+        text: 'Go to parking lot',
+        done: false
+      },
+      {
+        order: 2,
+        text: 'Clean the car',
+        done: false
+      }
+    ],
+    dueDate: '2022-01-08T13:12:53.000Z',
+    done: false
   }
 ]
 

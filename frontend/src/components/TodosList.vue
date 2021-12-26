@@ -1,5 +1,5 @@
 <template>
-  <div class="columns is-tablet">
+  <div class="columns is-multiline is-tablet">
     <div
       v-for="id in todoIds"
       :key="id"
