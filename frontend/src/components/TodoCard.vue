@@ -5,7 +5,7 @@
     :style="{ backgroundColor: lighterColor, boxShadow }">
     <div class="card-content">
       <b-dropdown
-        v-show="!cardPoppedUp.status"
+        v-show="!editModeIsActive"
         aria-role="list"
         :triggers="['hover']"
         class="actions">
@@ -16,7 +16,6 @@
               :key="i" />
           </div>
         </template>
-
         <b-dropdown-item
           aria-role="listitem"
           @click="() => updateCardPoppedUp({status: true, todoId: id})">
@@ -24,6 +23,7 @@
         </b-dropdown-item>
         <b-dropdown-item aria-role="listitem">Delete</b-dropdown-item>
       </b-dropdown>
+
       <div class="mb-5">
         <span class="is-uppercase is-size-7">{{ todo.type }}</span>
         <div
@@ -34,25 +34,41 @@
             icon="check-all"
             size="is-medium"
             class="mr-4" />
-          <h3
+
+          <component
+            :is="editModeIsActive ? 'b-input':'h3'"
+            v-model="todo.title"
+            placeholder="Title"
+            required
+            size="is-large"
             :class="[
               todoIsDone ? 'is-step-done' : '',
               'has-text-weight-bold is-size-4',
             ]">
             {{ todo.title }}
-          </h3>
+          </component>
+          <!-- <h3
+            :class="[
+              todoIsDone ? 'is-step-done' : '',
+              'has-text-weight-bold is-size-4',
+            ]">
+            {{ todo.title }}
+          </h3> -->
         </div>
         <span>{{ parseDateRelative(todo.dueDate) }}</span>
       </div>
+
       <div class="content has-text-weight-semibold">
         {{ todo.description }}
       </div>
+
       <TodoStep
         v-for="step in todo.steps"
         :key="step.order"
         :step="step"
         @step:update="updateTodoAndFetch" />
     </div>
+
     <footer
       class="card-footer has-text-weight-semibold"
       :style="{ borderColor }">
@@ -78,6 +94,7 @@
         {{ todoIsDone ? "Completed" : "Mark as complete" }}
       </span>
     </footer>
+
     <b-loading
       v-model="isLoading"
       animation="scale"
@@ -136,6 +153,10 @@ export default {
       const doneSteps = this.todo.steps.filter(({ done }) => done)
       const allSteps = this.todo.steps
       return doneSteps.length / allSteps.length
+    },
+    editModeIsActive () {
+      const { status, todoId } = this.cardPoppedUp
+      return status && this.id === todoId
     }
   },
   watch: {
@@ -165,8 +186,9 @@ export default {
       })
     },
     parseDateRelative (date) {
-      const diff = Math.abs(this.$dayjs().diff(date, 'day', true))
-      const differenceIsADayOrMore = diff >= 0.5
+      const diff = this.$dayjs().diff(date, 'day', true)
+      const toBeVerb = diff > 0 ? 'was' : 'is'
+      const differenceIsADayOrMore = Math.abs(diff) >= 0.5
 
       const parsedDate = differenceIsADayOrMore
         ? this.$dayjs(this.$dayjs(date)).calendar(null, {
@@ -174,7 +196,7 @@ export default {
         })
         : this.$dayjs(this.$dayjs(date)).fromNow()
 
-      return `Due date is ${parsedDate}`
+      return `Due date ${toBeVerb} ${parsedDate}`
     },
     togglePopUpCard ({ status, todoId }) {
       if (todoId !== this.id) return
@@ -216,6 +238,7 @@ export default {
 
 .pop-up
   position: fixed
+  overflow: hidden
   top: 200px
   left: 200px
   right: 200px
