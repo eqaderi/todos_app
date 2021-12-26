@@ -24,7 +24,6 @@ export default new Vuex.Store({
     UPDATE_TODO (state, { todo }) {
       const todoId = todo.id
       const index = state.todos.findIndex(({ id }) => +id === +todoId)
-      console.log(todo)
       state.todos[index] = todo
     }
   },

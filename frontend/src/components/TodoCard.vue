@@ -3,12 +3,28 @@
     class="card has-text-left is-relative"
     :style="{ backgroundColor: lighterColor, boxShadow }">
     <div class="card-content">
-      <b-tooltip
+      <!-- <b-tooltip
         class="delete-tooltip"
         label="Delete this item"
         type="is-dark">
         <button class="delete" />
-      </b-tooltip>
+      </b-tooltip> -->
+
+      <b-dropdown
+        :triggers="['hover']"
+        aria-role="list"
+        class="actions">
+        <template #trigger>
+          <div class="actions__icon">
+            <div
+              v-for="i in [1,2,3]"
+              :key="i" />
+          </div>
+        </template>
+
+        <b-dropdown-item aria-role="listitem">Edit</b-dropdown-item>
+        <b-dropdown-item aria-role="listitem">Delete</b-dropdown-item>
+      </b-dropdown>
       <div class="mb-5">
         <span class="is-uppercase is-size-7">{{ todoCopy.type }}</span>
         <div
@@ -35,14 +51,14 @@
     <footer
       class="card-footer has-text-weight-semibold"
       :style="{ borderColor }">
-      <span
+      <!-- <span
         class="card-footer-item is-clickable"
         :style="{ borderColor }">
         Edit
-      </span>
+      </span> -->
       <span
         :class="[todoIsDone ? 'is-done' : '', 'card-footer-item is-clickable done-btn is-flex']"
-        :style="{ borderColor, boxShadow: boxShadow2(todoIsDone) }"
+        :style="{ borderColor }"
         @click="toggleDone">
         <b-icon
           v-if="todoIsDone"
@@ -138,35 +154,61 @@ export default {
     updateStep (value, index) {
       this.todoCopy.steps[index] = value
       this.updateTodo(this.todoCopy)
-    },
-    boxShadow2 (done) {
-      return done ? `inset 0 0 .2em .2em ${this.borderColor.alpha(0.3)}` : ''
     }
   }
 }
 </script>
 <style lang="sass" scoped>
-.card
+.card,
+.loading-overlay
   border-radius: 1em
-  overflow: hidden
 
-  &:hover
-    .delete-tooltip
-      opacity: 1
-      transform: scale(1)
-
-.delete-tooltip
+.actions
   position: absolute
   display: block
-  top: 1em
-  right: 1em
+  top: 0
+  right: 0
   font-size: initial
-  opacity: 0
-  transform: scale(.5)
-  transition: opacity .2s ease-out, transform .2s ease-out
+  padding: 1em 1em 1em 2em
+  cursor: pointer
+  &__icon div
+    height: .25em
+    width: .25em
+    border-radius: .25em
+    background-color: #2c3e50
+    margin-bottom: .25em
+    transform: rotateY(0deg)
+    transition: transform .2s ease-out
+    &:nth-child(2)
+      transition-delay: .1s
+    &:nth-child(3)
+      transition-delay: .2s
+  &:hover
+    .actions__icon div
+      transform: rotateY(180deg)
 
 .done-btn
   border-bottom-right-radius: 1em
+  position: relative
+  &::after
+    content: ''
+    position: absolute
+    top: 0
+    right: 0
+    bottom: 0
+    left: 0
+    box-shadow: rgb(0 0 0) 0px 4px 6px -2px inset
+    background-color: rgb(0 0 0 / 20%)
+    mix-blend-mode: overlay
+    opacity: 0
+    transition: opacity 0s linear .1s
+  &:focus,
+  &:active
+    &::after
+      opacity: 1
+      transition-delay: 0s
+
 .is-done
-  background-color: rgb(0 0 0 / 10%)
+  &::after
+    opacity: 1
 </style>
