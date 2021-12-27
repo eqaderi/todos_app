@@ -12,20 +12,27 @@
         <template #trigger>
           <div class="actions__icon">
             <div
-              v-for="i in [1, 2, 3]"
+              v-for="i in 3"
               :key="i" />
           </div>
         </template>
         <b-dropdown-item
           aria-role="listitem"
-          @click="() => updateCardPoppedUp({status: true, todoId: id})">
+          @click="() => updateCardPoppedUp({ status: true, todoId: id })">
           Edit
         </b-dropdown-item>
         <b-dropdown-item aria-role="listitem">Delete</b-dropdown-item>
       </b-dropdown>
 
       <div class="mb-5">
-        <span class="is-uppercase is-size-7">{{ todo.type }}</span>
+        <b-taglist class="mb-0">
+          <b-tag
+            v-for="tag in todo.tags"
+            :key="tag"
+            type="is-light">
+            {{ tag }}
+          </b-tag>
+        </b-taglist>
         <div
           class="is-flex is-align-content-center"
           :style="{ color: darkerColor }">
@@ -36,10 +43,9 @@
             class="mr-4" />
 
           <component
-            :is="editModeIsActive ? 'b-input':'h3'"
+            :is="editModeIsActive ? 'b-input' : 'h3'"
             v-model="todo.title"
             placeholder="Title"
-            required
             size="is-large"
             :class="[
               todoIsDone ? 'is-step-done' : '',
@@ -47,6 +53,7 @@
             ]">
             {{ todo.title }}
           </component>
+          <span v-if="!todo.title.trim()">The title is required</span>
           <!-- <h3
             :class="[
               todoIsDone ? 'is-step-done' : '',
@@ -55,7 +62,22 @@
             {{ todo.title }}
           </h3> -->
         </div>
-        <span>{{ parseDateRelative(todo.dueDate) }}</span>
+        <div class="due-date is-flex is-align-items-center">
+          <div
+            v-if="!todoIsDone && due.iconsLength"
+            class="due-date__icon mr-2 is-flex is-align-items-center">
+            <b-icon
+              v-for="n in due.iconsLength"
+              :key="n"
+              :style="{ color: due.color, width: '10px' }"
+              size="is-small"
+              icon="exclamation-thick"
+              class="pr-0" />
+          </div>
+          <div class="has-text-weight-semibold is-size-7 is-family-monospace">
+            {{ due.date }}
+          </div>
+        </div>
       </div>
 
       <div class="content has-text-weight-semibold">
@@ -119,7 +141,13 @@ export default {
   },
   data () {
     return {
-      todo: []
+      todo: [],
+      due: {
+        date: '',
+        color: 'yellow',
+        iconsLength: 0
+      },
+      intervalId: null
     }
   },
   computed: {
@@ -145,9 +173,7 @@ export default {
       return `${inside}, ${outside}`
     },
     todoIsDone () {
-      return (
-        this.todo.done && this.todo.steps.every(({ done }) => done)
-      )
+      return this.todo.done && this.todo.steps.every(({ done }) => done)
     },
     progressPercent () {
       const doneSteps = this.todo.steps.filter(({ done }) => done)
@@ -169,6 +195,13 @@ export default {
   },
   created () {
     this.todo = cloneDeep(this.getTodoById()(this.id))
+    this.parseDueDateR()
+    this.intervalId = setInterval(() => {
+      this.parseDueDateR()
+    }, 60000)
+  },
+  beforeDestroy () {
+    clearInterval(this.intervalId)
   },
   // mounted () {
   //   this.cardRef = this.$refs[`card${this.id}`]
@@ -185,18 +218,32 @@ export default {
         Object.assign({}, this.todo, this.getTodoById()(this.id))
       })
     },
-    parseDateRelative (date) {
-      const diff = this.$dayjs().diff(date, 'day', true)
+    parseDueDateR () {
+      const diff = this.$dayjs().diff(this.todo.dueDate, 'day', true)
       const toBeVerb = diff > 0 ? 'was' : 'is'
-      const differenceIsADayOrMore = Math.abs(diff) >= 0.5
 
+      if (diff >= 0) {
+        this.due.color = '#f44336'
+        this.due.iconsLength = 3
+      } else if (diff < 0 && diff > -1) {
+        this.due.color = '#f44336'
+        this.due.iconsLength = 2
+      } else if (diff <= -1 && diff > -2) {
+        this.due.color = '#f44336'
+        this.due.iconsLength = 1
+      } else if (diff <= -2 && diff > -4) {
+        this.due.color = '#fdd835'
+        this.due.iconsLength = 1
+      }
+
+      const differenceIsADayOrMore = Math.abs(diff) >= 0.5
       const parsedDate = differenceIsADayOrMore
-        ? this.$dayjs(this.$dayjs(date)).calendar(null, {
+        ? this.$dayjs(this.$dayjs(this.todo.dueDate)).calendar(null, {
           sameElse: 'MMMM D, YYYY h:mm A'
         })
-        : this.$dayjs(this.$dayjs(date)).fromNow()
+        : this.$dayjs(this.$dayjs(this.todo.dueDate)).fromNow()
 
-      return `Due date ${toBeVerb} ${parsedDate}`
+      this.due.date = `Due date ${toBeVerb} ${parsedDate}`
     },
     togglePopUpCard ({ status, todoId }) {
       if (todoId !== this.id) return
@@ -244,6 +291,23 @@ export default {
   right: 200px
   box-shadow: none !important
   // z-index: 1000
+
+.due-date
+  min-height: 26px
+  &__icon
+    position: relative
+    margin-right: 5px
+    padding: 5px
+    &::after
+      content: ''
+      position: absolute
+      top: 0
+      right: 0
+      bottom: 0
+      left: 0
+      background-color: rgb(0 0 0 / 40%)
+      mix-blend-mode: overlay
+      border-radius: 5px
 
 .actions
   position: absolute
@@ -311,5 +375,4 @@ export default {
 .is-done
   &::after
     opacity: 1
-
 </style>
