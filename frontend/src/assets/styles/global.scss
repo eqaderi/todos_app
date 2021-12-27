@@ -2,7 +2,7 @@
 @import "~bulma/sass/utilities/_all";
 
 // Set your colors
-$primary: #000000;
+$primary: #15ff00;
 // $primary-light: findLightColor($primary);
 // $primary-dark: findDarkColor($primary);
 // $primary-invert: findColorInvert($primary);
@@ -77,34 +77,24 @@ $primary: #000000;
 // $link-invert: $primary-invert;
 // $link-focus-border: $primary;
 
-// Import Bulma and Buefy styles
 
 $loading-background:	rgba(0,0,0,.5);
 $loading-icon-size: 2em;
 
+// $family-primary: 'Roboto', sans-serif;
+// $family-secondary: 'Noto Sans', sans-serif;
+
+
+// Import Bulma and Buefy styles
 @import "~bulma";
 @import "~buefy/src/scss/buefy";
 
-
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
+  // font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-}
-
-#nav {
-  padding: 30px;
-
-  a {
-    font-weight: bold;
-    color: #2c3e50;
-
-    &.router-link-exact-active {
-      color: #42b983;
-    }
-  }
+  // text-align: center;
+  // color: #2c3e50;
 }
 
 .is-full-width {

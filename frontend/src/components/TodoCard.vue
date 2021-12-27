@@ -4,6 +4,7 @@
     class="card has-text-left todo-item"
     :style="{ backgroundColor: lighterColor, boxShadow }">
     <div class="card-content">
+      <!-- Actions -->
       <b-dropdown
         v-show="!editModeIsActive"
         aria-role="list"
@@ -18,13 +19,15 @@
         </template>
         <b-dropdown-item
           aria-role="listitem"
-          @click="() => updateCardPoppedUp({ status: true, todoId: id })">
+          @click="popUp">
           Edit
         </b-dropdown-item>
         <b-dropdown-item aria-role="listitem">Delete</b-dropdown-item>
       </b-dropdown>
+      <!-- Actions -->
 
       <div class="mb-5">
+        <!-- Tags -->
         <b-taglist class="mb-0">
           <b-tag
             v-for="tag in todo.tags"
@@ -33,35 +36,48 @@
             {{ tag }}
           </b-tag>
         </b-taglist>
-        <div
-          class="is-flex is-align-content-center"
-          :style="{ color: darkerColor }">
-          <b-icon
-            v-if="todoIsDone"
-            icon="check-all"
-            size="is-medium"
-            class="mr-4" />
+        <!-- Tags -->
 
-          <component
-            :is="editModeIsActive ? 'b-input' : 'h3'"
-            v-model="todo.title"
-            placeholder="Title"
-            size="is-large"
-            :class="[
-              todoIsDone ? 'is-step-done' : '',
-              'has-text-weight-bold is-size-4',
-            ]">
-            {{ todo.title }}
-          </component>
-          <span v-if="!todo.title.trim()">The title is required</span>
-          <!-- <h3
+        <!-- Header -->
+        <div class="my-3">
+          <div
+            class="is-flex is-align-content-center"
+            :style="{ color: darkerColor }">
+            <b-icon
+              v-if="todoIsDone"
+              icon="check-all"
+              size="is-medium"
+              class="mr-4" />
+            <component
+              :is="editModeIsActive ? 'b-input' : 'h3'"
+              :ref="`title${id}`"
+              v-model="todo.title"
+              placeholder="Title"
+              size="is-large"
+              autofocus
+              :class="[
+                todoIsDone ? 'is-step-done' : '',
+                'header has-text-weight-bold is-size-4',
+              ]">
+              {{ todo.title }}
+            </component>
+          </div>
+          <div
+            v-if="!todo.title.trim()"
+            class="is-family-secondary is-size-7 has-text-weight-semibold has-text-danger">
+            Can't do it! Title is required ¯\_(ツ)_/¯
+          </div>
+        </div>
+        <!-- <h3
             :class="[
               todoIsDone ? 'is-step-done' : '',
               'has-text-weight-bold is-size-4',
             ]">
             {{ todo.title }}
           </h3> -->
-        </div>
+        <!-- Header -->
+
+        <!-- Due date -->
         <div class="due-date is-flex is-align-items-center">
           <div
             v-if="!todoIsDone && due.iconsLength"
@@ -78,17 +94,34 @@
             {{ due.date }}
           </div>
         </div>
+        <!-- Due date -->
       </div>
 
+      <!-- Description -->
       <div class="content has-text-weight-semibold">
         {{ todo.description }}
       </div>
+      <!-- Description -->
 
+      <!-- TodoStep -->
       <TodoStep
-        v-for="step in todo.steps"
+        v-for="(step, index) in todo.steps"
         :key="step.order"
+        :index="index"
+        :todo-id="id"
         :step="step"
-        @step:update="updateTodoAndFetch" />
+        :edit-mode-is-active="editModeIsActive"
+        @step:delete="deleteStep" />
+      <div
+        v-if="editModeIsActive"
+        class="is-clickable pt-4"
+        @click="addStep">
+        <b-icon
+          size="is-small"
+          icon="plus" />
+        <span class="pl-3">list item</span>
+      </div>
+      <!-- TodoStep -->
     </div>
 
     <footer
@@ -151,7 +184,7 @@ export default {
     }
   },
   computed: {
-    ...mapState(['loader', 'cardPoppedUp']),
+    ...mapState(['loader', 'cardPoppedUp', 'formIsValid', 'cardIsShaking']),
     isLoading () {
       return this.loader.status && this.loader.todoId === this.todo.id
     },
@@ -188,8 +221,27 @@ export default {
   watch: {
     cardPoppedUp: {
       deep: true,
-      handler (newValue) {
-        this.togglePopUpCard(newValue)
+      handler (value) {
+        this.togglePopUpCard(value)
+      }
+    },
+    cardIsShaking (value) {
+      if (value) {
+        this.shake()
+      }
+    },
+    // data: {
+    //   immediate: true,
+    //   deep: true,
+    //   handler(newValue, oldValue) {
+
+    //   }
+    // }
+    'todo.title' (value) {
+      if (this.formIsValid && !value.trim()) {
+        this.updateFormIsValid(false)
+      } else if (!this.formIsValid && value.trim()) {
+        this.updateFormIsValid(true)
       }
     }
   },
@@ -203,11 +255,17 @@ export default {
   beforeDestroy () {
     clearInterval(this.intervalId)
   },
-  // mounted () {
-  //   this.cardRef = this.$refs[`card${this.id}`]
-  // },
+  mounted () {
+    this.cardRef = this.$refs[`card${this.id}`]
+  },
   methods: {
-    ...mapActions(['updateTodo', 'updateBackdrop', 'updateCardPoppedUp']),
+    ...mapActions([
+      'updateTodo',
+      'updateBackdrop',
+      'updateCardPoppedUp',
+      'updateFormIsValid',
+      'updateCardIsShaking'
+    ]),
     ...mapGetters(['getTodoById']),
     toggleDone () {
       this.todo.done = !this.todo.done
@@ -248,29 +306,75 @@ export default {
     togglePopUpCard ({ status, todoId }) {
       if (todoId !== this.id) return
 
-      const cardRef = this.$refs[`card${todoId}`]
-      const cardFlipState = this.$Flip.getState(cardRef)
+      // const cardRef = this.$refs[`card${todoId}`]
+      const cardFlipState = this.$Flip.getState(this.cardRef)
       const toggleZIndex = () => {
-        cardRef.style.zIndex = status ? 1000 : 'initial'
-        // cardRef.style.position = status ? 'fixed' : 'relative'
+        this.cardRef.style.zIndex = status ? 1000 : 'initial'
+        if (status) this.$refs[`title${this.id}`].focus()
+        // this.cardRef.style.position = status ? 'fixed' : 'relative'
       }
 
       this.updateBackdrop(status)
 
-      cardRef.style.zIndex = 1000
-      // cardRef.style.position = 'fixed'
+      this.cardRef.style.zIndex = 1000
+      // this.cardRef.style.position = 'fixed'
 
       if (status) {
-        cardRef.classList.add('pop-up')
+        this.cardRef.classList.add('pop-up')
       } else {
-        cardRef.classList.remove('pop-up')
+        this.updateSteps()
+        this.updateStepsOrder()
+        this.updateTodoAndFetch()
+
+        this.cardRef.classList.remove('pop-up')
       }
 
       this.$Flip.from(cardFlipState, {
         duration: 0.5,
         ease: 'power4.out',
+        absolute: true,
         onComplete: toggleZIndex
       })
+    },
+    shake () {
+      if (this.cardPoppedUp.todoId !== this.id) return
+      this.$gsap.fromTo(this.cardRef, { x: -5 }, {
+        duration: 0.01,
+        x: 5,
+        clearProps: 'x',
+        repeat: 30,
+        onComplete: () => this.updateCardIsShaking(false)
+      })
+    },
+    popUp () {
+      this.updateCardPoppedUp({ status: true, todoId: this.id })
+    },
+    deleteStep (index) {
+      this.todo.steps.splice(index, 1)
+      // this.updateStepsOrder()
+      // this.updateTodoAndFetch()
+    },
+    addStep () {
+      this.todo.steps.push({
+        order: this.todo.steps.length + 1,
+        text: '',
+        done: false
+      })
+
+      // this.$refs[`step${this.id}${this.todo.steps.length}`].focus()
+      // console.log('x', `step${this.id}${this.todo.steps.length - 1}`)
+      // const i = setTimeout(() => {
+      //   this.$refs[`step${this.id}${this.todo.steps.length - 2}`].focus()
+      //   clearTimeout(i)
+      // }, 500)
+    },
+    updateSteps () {
+      this.todo.steps = this.todo.steps.filter(({ text }) => text)
+    },
+    updateStepsOrder () {
+      for (let i = 0; i < this.todo.steps.length; i++) {
+        this.todo.steps[i].order = i + 1
+      }
     }
   }
 }
@@ -282,6 +386,24 @@ export default {
 
 .card
   position: relative
+
+::v-deep .header
+  // margin: .5em 0
+  &,
+  input
+    font-weight: 700 !important
+    font-size: 1.5rem !important
+    padding: 0
+    height: initial
+    background-color: initial
+    border-color: transparent
+    border-width: 0 0 1px 0
+    border-radius: 0
+    box-shadow: none
+    color: currentColor
+    &:hover,
+    &:focus
+      border-color: rgba(0 0 0 / .25)
 
 .pop-up
   position: fixed

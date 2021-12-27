@@ -16,7 +16,9 @@ export default new Vuex.Store({
     cardPoppedUp: {
       status: false,
       todoId: null
-    }
+    },
+    formIsValid: true,
+    cardIsShaking: false
   },
   mutations: {
     SET_TODOS (state, payload) {
@@ -37,6 +39,12 @@ export default new Vuex.Store({
     SET_CARD_POPPED_UP (state, { status, todoId }) {
       state.cardPoppedUp.status = status
       state.cardPoppedUp.todoId = todoId
+    },
+    SET_FORM_IS_VALID (state, status) {
+      state.formIsValid = status
+    },
+    SET_SHAKE (state, status) {
+      state.cardIsShaking = status
     }
   },
   actions: {
@@ -69,6 +77,12 @@ export default new Vuex.Store({
     },
     updateCardPoppedUp ({ commit }, payload) {
       commit('SET_CARD_POPPED_UP', payload)
+    },
+    updateFormIsValid ({ commit }, status) {
+      commit('SET_FORM_IS_VALID', status)
+    },
+    updateCardIsShaking ({ commit }, status) {
+      commit('SET_SHAKE', status)
     }
   },
   getters: {
