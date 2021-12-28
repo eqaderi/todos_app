@@ -1,165 +1,177 @@
 <template>
   <div
-    :ref="`card${id}`"
-    class="card has-text-left todo-item"
-    :style="{ backgroundColor: lighterColor, boxShadow }">
-    <div class="card-content">
-      <!-- Actions -->
-      <b-dropdown
-        v-show="!editModeIsActive"
-        aria-role="list"
-        :triggers="['hover']"
-        class="actions">
-        <template #trigger>
-          <div class="actions__icon">
-            <div
-              v-for="i in 3"
-              :key="i" />
-          </div>
-        </template>
-        <b-dropdown-item
-          aria-role="listitem"
-          @click="popUp">
-          Edit
-        </b-dropdown-item>
-        <b-dropdown-item aria-role="listitem">Delete</b-dropdown-item>
-      </b-dropdown>
-      <!-- Actions -->
+    :id="`card${id}parent`"
+    :ref="`card${id}parent`"
+    class="card-parent">
+    <div
+      :ref="`card${id}`"
+      class="card-wrapper">
+      <div
+        class="card has-text-left todo-item"
+        :style="{ backgroundColor: lighterColor, boxShadow }">
+        <div
+          :ref="`card${id}content`"
+          class="card-content">
+          <!-- Actions -->
+          <b-dropdown
+            v-show="!editModeIsActive"
+            aria-role="list"
+            :triggers="['hover']"
+            class="actions">
+            <template #trigger>
+              <div class="actions__icon">
+                <div
+                  v-for="i in 3"
+                  :key="i" />
+              </div>
+            </template>
+            <b-dropdown-item
+              aria-role="listitem"
+              @click="popUp">
+              Edit
+            </b-dropdown-item>
+            <b-dropdown-item aria-role="listitem">Delete</b-dropdown-item>
+          </b-dropdown>
+          <!-- Actions -->
 
-      <div class="mb-5">
-        <!-- Tags -->
-        <b-taglist class="mb-0">
-          <b-tag
-            v-for="tag in todo.tags"
-            :key="tag"
-            type="is-light">
-            {{ tag }}
-          </b-tag>
-        </b-taglist>
-        <!-- Tags -->
+          <div class="mb-5">
+            <!-- Tags -->
+            <b-taglist class="mb-0">
+              <b-tag
+                v-for="tag in todo.tags"
+                :key="tag"
+                type="is-light">
+                {{ tag }}
+              </b-tag>
+            </b-taglist>
+            <!-- Tags -->
 
-        <!-- Header -->
-        <div class="my-3">
-          <div
-            class="is-flex is-align-content-center"
-            :style="{ color: darkerColor }">
-            <b-icon
-              v-if="todoIsDone"
-              icon="check-all"
-              size="is-medium"
-              class="mr-4" />
-            <component
-              :is="editModeIsActive ? 'b-input' : 'h3'"
-              :ref="`title${id}`"
-              v-model="todo.title"
-              placeholder="Title"
-              size="is-large"
-              autofocus
-              :class="[
-                todoIsDone ? 'is-step-done' : '',
-                'header has-text-weight-bold is-size-4',
-              ]">
-              {{ todo.title }}
-            </component>
-          </div>
-          <div
-            v-if="!todo.title.trim()"
-            class="is-family-secondary is-size-7 has-text-weight-semibold has-text-danger">
-            Can't do it! Title is required ¯\_(ツ)_/¯
-          </div>
-        </div>
-        <!-- <h3
+            <!-- Header -->
+            <div class="my-3">
+              <div
+                class="is-flex is-align-content-center"
+                :style="{ color: darkerColor }">
+                <b-icon
+                  v-if="todoIsDone"
+                  icon="check-all"
+                  size="is-medium"
+                  class="mr-4" />
+                <component
+                  :is="editModeIsActive ? 'b-input' : 'h3'"
+                  :ref="`title${id}`"
+                  v-model="todo.title"
+                  placeholder="Title"
+                  size="is-large"
+                  autofocus
+                  :class="[
+                    todoIsDone ? 'is-step-done' : '',
+                    'header has-text-weight-bold is-size-4',
+                  ]">
+                  {{ todo.title }}
+                </component>
+              </div>
+              <div
+                v-if="!todo.title.trim()"
+                class="is-family-secondary is-size-7 has-text-weight-semibold has-text-danger">
+                Can't do it! Title is required ¯\_(ツ)_/¯
+              </div>
+            </div>
+            <!-- <h3
             :class="[
               todoIsDone ? 'is-step-done' : '',
               'has-text-weight-bold is-size-4',
             ]">
             {{ todo.title }}
           </h3> -->
-        <!-- Header -->
+            <!-- Header -->
 
-        <!-- Due date -->
-        <div class="due-date is-flex is-align-items-center">
+            <!-- Due date -->
+            <div class="due-date is-flex is-align-items-center">
+              <div
+                v-if="!todoIsDone && due.iconsLength"
+                class="due-date__icon mr-2 is-flex is-align-items-center">
+                <b-icon
+                  v-for="n in due.iconsLength"
+                  :key="n"
+                  :style="{ color: due.color, width: '10px' }"
+                  size="is-small"
+                  icon="exclamation-thick"
+                  class="pr-0" />
+              </div>
+              <div
+                class="has-text-weight-semibold is-size-7 is-family-monospace has-height-transitioned">
+                {{ due.date }}
+              </div>
+            </div>
+            <!-- Due date -->
+          </div>
+
+          <!-- Description -->
+          <div class="content has-text-weight-semibold has-height-transitioned">
+            {{ todo.description }}
+          </div>
+          <!-- Description -->
+
+          <!-- TodoStep -->
+          <TodoStep
+            v-for="(step, index) in todo.steps"
+            :key="step.order"
+            :index="index"
+            :todo-id="id"
+            :step="step"
+            :edit-mode-is-active="editModeIsActive"
+            @step:delete="deleteStep" />
           <div
-            v-if="!todoIsDone && due.iconsLength"
-            class="due-date__icon mr-2 is-flex is-align-items-center">
+            v-if="editModeIsActive"
+            class="is-clickable pt-4"
+            @click="addStep">
             <b-icon
-              v-for="n in due.iconsLength"
-              :key="n"
-              :style="{ color: due.color, width: '10px' }"
               size="is-small"
-              icon="exclamation-thick"
-              class="pr-0" />
+              icon="plus" />
+            <span class="pl-3">list item</span>
           </div>
-          <div class="has-text-weight-semibold is-size-7 is-family-monospace">
-            {{ due.date }}
-          </div>
+          <!-- TodoStep -->
         </div>
-        <!-- Due date -->
-      </div>
 
-      <!-- Description -->
-      <div class="content has-text-weight-semibold">
-        {{ todo.description }}
-      </div>
-      <!-- Description -->
-
-      <!-- TodoStep -->
-      <TodoStep
-        v-for="(step, index) in todo.steps"
-        :key="step.order"
-        :index="index"
-        :todo-id="id"
-        :step="step"
-        :edit-mode-is-active="editModeIsActive"
-        @step:delete="deleteStep" />
-      <div
-        v-if="editModeIsActive"
-        class="is-clickable pt-4"
-        @click="addStep">
-        <b-icon
-          size="is-small"
-          icon="plus" />
-        <span class="pl-3">list item</span>
-      </div>
-      <!-- TodoStep -->
-    </div>
-
-    <footer
-      class="card-footer has-text-weight-semibold"
-      :style="{ borderColor }">
-      <div
-        class="progress-bar"
-        :style="{ transform: `scaleX(${progressPercent})` }" />
-      <!-- <span
+        <footer
+          class="card-footer has-text-weight-semibold"
+          :style="{ borderColor, backgroundColor: lighterColor }">
+          <!-- <span
         class="card-footer-item is-clickable"
         :style="{ borderColor }">
         Edit
       </span> -->
-      <span
-        :class="[
-          todoIsDone ? 'is-done' : '',
-          'card-footer-item is-clickable done-btn is-flex',
-        ]"
-        :style="{ borderColor }"
-        @click="toggleDone">
-        <b-icon
-          v-if="todoIsDone"
-          icon="check-all"
-          class="pr-2" />
-        {{ todoIsDone ? "Completed" : "Mark as complete" }}
-      </span>
-    </footer>
+          <div
+            :class="[
+              todoIsDone ? 'is-done' : '',
+              'card-footer-item is-clickable done-btn is-flex',
+            ]"
+            :style="{ borderColor }"
+            @click="toggleDone">
+            <div
+              :ref="`card${id}progress`"
+              class="progress-bar"
+              :style="{ transform: `scaleX(${progressPercent})` }" />
+            <b-icon
+              v-if="todoIsDone"
+              icon="check-all"
+              class="pr-2" />
+            {{ todoIsDone ? "Completed" : "Mark as complete" }}
+          </div>
+        </footer>
 
-    <b-loading
-      v-model="isLoading"
-      animation="scale"
-      :is-full-page="false" />
+        <b-loading
+          v-model="isLoading"
+          animation="scale"
+          :is-full-page="false" />
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import { mapState, mapActions, mapGetters } from 'vuex'
-import { cloneDeep } from 'lodash'
+import { cloneDeep, isEqual } from 'lodash'
 import TodoStep from './TodoStep.vue'
 
 export default {
@@ -180,7 +192,8 @@ export default {
         color: 'yellow',
         iconsLength: 0
       },
-      intervalId: null
+      intervalId: null,
+      todoInfoBeforePop: {}
     }
   },
   computed: {
@@ -203,7 +216,7 @@ export default {
     boxShadow () {
       const outside = `0 .5em 1.5em -.1em ${this.lighterColor}`
       const inside = `inset 0 0 .25em 1em ${this.borderColor.alpha(0.05)}`
-      return `${inside}, ${outside}`
+      return this.editModeIsActive ? `${inside}` : `${inside}, ${outside}`
     },
     todoIsDone () {
       return this.todo.done && this.todo.steps.every(({ done }) => done)
@@ -256,7 +269,13 @@ export default {
     clearInterval(this.intervalId)
   },
   mounted () {
+    this.popUpContainerRef = document.getElementById('pop-up-container')
+    this.cardParentRef = document.getElementById(`card${this.id}parent`)
     this.cardRef = this.$refs[`card${this.id}`]
+    this.cardContentRef = this.$refs[`card${this.id}content`]
+    this.cardProgressRef = this.$refs[`card${this.id}progress`]
+    // this.cardParentRef = this.$refs[`card${this.id}parent`]
+    // this.popUpContainerRef = this.$refs['pop-up-container']
   },
   methods: {
     ...mapActions([
@@ -306,45 +325,59 @@ export default {
     togglePopUpCard ({ status, todoId }) {
       if (todoId !== this.id) return
 
-      // const cardRef = this.$refs[`card${todoId}`]
       const cardFlipState = this.$Flip.getState(this.cardRef)
-      const toggleZIndex = () => {
-        this.cardRef.style.zIndex = status ? 1000 : 'initial'
-        if (status) this.$refs[`title${this.id}`].focus()
-        // this.cardRef.style.position = status ? 'fixed' : 'relative'
-      }
-
+      this.cardRef.style.zIndex = 2000
       this.updateBackdrop(status)
 
-      this.cardRef.style.zIndex = 1000
-      // this.cardRef.style.position = 'fixed'
-
       if (status) {
-        this.cardRef.classList.add('pop-up')
+        this.todoInfoBefore = cloneDeep(this.todo)
+        this.popUpContainerRef.style.visibility = 'visible'
+        this.cardParentRef.style.height = `${this.cardParentRef.offsetHeight}px`
+        this.popUpContainerRef.appendChild(this.cardRef)
       } else {
-        this.updateSteps()
-        this.updateStepsOrder()
-        this.updateTodoAndFetch()
-
+        this.cardParentRef.appendChild(this.cardRef)
         this.cardRef.classList.remove('pop-up')
+
+        if (!isEqual(this.todo, this.todoInfoBefore)) {
+          this.updateSteps()
+          this.updateStepsOrder()
+          this.updateTodoAndFetch()
+        }
+      }
+
+      const onComplete = () => {
+        if (status) {
+          this.$refs[`title${this.id}`].focus()
+          this.cardRef.classList.add('pop-up')
+        } else {
+          this.popUpContainerRef.style.visibility = 'hidden'
+          this.cardParentRef.style.height = 'initial'
+          this.cardRef.style.zIndex = 'initial'
+        }
       }
 
       this.$Flip.from(cardFlipState, {
-        duration: 0.5,
-        ease: 'power4.out',
+        // paused: true,
+        duration: 0.3,
+        ease: 'power2.out',
         absolute: true,
-        onComplete: toggleZIndex
+        onComplete
       })
     },
     shake () {
       if (this.cardPoppedUp.todoId !== this.id) return
-      this.$gsap.fromTo(this.cardRef, { x: -5 }, {
-        duration: 0.01,
-        x: 5,
-        clearProps: 'x',
-        repeat: 30,
-        onComplete: () => this.updateCardIsShaking(false)
-      })
+      this.$gsap.fromTo(
+        this.cardRef,
+        { x: -5 },
+        {
+          duration: 0.01,
+          x: 5,
+          clearProps: 'x',
+          repeat: 30,
+          // onStart: () => { this.cardRef.style.opacity = 0 },
+          onComplete: () => this.updateCardIsShaking(false)
+        }
+      )
     },
     popUp () {
       this.updateCardPoppedUp({ status: true, todoId: this.id })
@@ -381,14 +414,32 @@ export default {
 </script>
 <style lang="sass" scoped>
 .card,
-.loading-overlay
+.loading-overlay,
+.card-wrapper
   border-radius: 1em
+
+.card-wrapper
+  position: relative
 
 .card
   position: relative
+  &-footer
+    position: sticky
+    top: 100%
+    overflow: hidden
+    border-radius: 0 0 1em 1em
+
+.pop-up
+  .card
+    overflow-y: auto
+    overflow-x: hidden
+
+.has-height-transitioned
+  transition: all 0.3s ease-out
+  height: auto
+  flex: 1
 
 ::v-deep .header
-  // margin: .5em 0
   &,
   input
     font-weight: 700 !important
@@ -404,15 +455,6 @@ export default {
     &:hover,
     &:focus
       border-color: rgba(0 0 0 / .25)
-
-.pop-up
-  position: fixed
-  overflow: hidden
-  top: 200px
-  left: 200px
-  right: 200px
-  box-shadow: none !important
-  // z-index: 1000
 
 .due-date
   min-height: 26px
@@ -457,10 +499,6 @@ export default {
     .actions__icon div
       transform: rotateY(180deg)
 
-.card-footer
-  position: relative
-  overflow: hidden
-
 .progress-bar
   position: absolute
   top: 0
@@ -476,6 +514,7 @@ export default {
 .done-btn
   border-bottom-right-radius: 1em
   position: relative
+  overflow: hidden
   &::after
     content: ''
     position: absolute
