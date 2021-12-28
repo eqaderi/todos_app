@@ -1,6 +1,7 @@
 <template>
   <div :class="{ 'mb-1': !editModeIsActive, 'is-flex is-align-items-center step-edit': editModeIsActive }">
     <b-checkbox
+      v-show="(index + 1) !== stepsLength"
       v-model="step.done"
       class="checkbox-is-transparent"
       type="is-light"
@@ -14,13 +15,13 @@
     </b-checkbox>
     <b-input
       v-if="editModeIsActive"
-      :ref="`step${todoId}${index}`"
       v-model="step.text"
+      placeholder="+  List item"
       :class="{'is-step-done': step.done }"
       role="textbox"
       contenteditable="true" />
     <b-tooltip
-      v-if="editModeIsActive"
+      v-show="editModeIsActive && (index + 1) !== stepsLength"
       label="Delete"
       type="is-dark"
       class="ml-auto"
@@ -49,19 +50,17 @@ export default {
       type: Number,
       required: true
     },
-    todoId: {
+    stepsLength: {
       type: Number,
       required: true
     }
+  },
+  watch: {
+    'step.text' (value) {
+      if (!value) this.$emit('step:delete', this.index)
+      else if (this.index === this.stepsLength - 1) this.$emit('step:add')
+    }
   }
-  // watch: {
-  //   step: {
-  //     deep: true,
-  //     handler (value) {
-  //       this.$emit('step:update', value)
-  //     }
-  //   }
-  // }
 }
 </script>
 

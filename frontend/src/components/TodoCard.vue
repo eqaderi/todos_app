@@ -117,19 +117,11 @@
             v-for="(step, index) in todo.steps"
             :key="step.order"
             :index="index"
-            :todo-id="id"
+            :steps-length="todo.steps.length"
             :step="step"
             :edit-mode-is-active="editModeIsActive"
-            @step:delete="deleteStep" />
-          <div
-            v-if="editModeIsActive"
-            class="is-clickable pt-4"
-            @click="addStep">
-            <b-icon
-              size="is-small"
-              icon="plus" />
-            <span class="pl-3">list item</span>
-          </div>
+            @step:delete="deleteStep"
+            @step:add="addStep" />
           <!-- TodoStep -->
         </div>
 
@@ -334,12 +326,12 @@ export default {
         this.popUpContainerRef.style.visibility = 'visible'
         this.cardParentRef.style.height = `${this.cardParentRef.offsetHeight}px`
         this.popUpContainerRef.appendChild(this.cardRef)
+        this.addStep()
       } else {
         this.cardParentRef.appendChild(this.cardRef)
         this.cardRef.classList.remove('pop-up')
-
+        this.todo.steps.pop()
         if (!isEqual(this.todo, this.todoInfoBefore)) {
-          this.updateSteps()
           this.updateStepsOrder()
           this.updateTodoAndFetch()
         }
@@ -384,8 +376,6 @@ export default {
     },
     deleteStep (index) {
       this.todo.steps.splice(index, 1)
-      // this.updateStepsOrder()
-      // this.updateTodoAndFetch()
     },
     addStep () {
       this.todo.steps.push({
@@ -393,16 +383,6 @@ export default {
         text: '',
         done: false
       })
-
-      // this.$refs[`step${this.id}${this.todo.steps.length}`].focus()
-      // console.log('x', `step${this.id}${this.todo.steps.length - 1}`)
-      // const i = setTimeout(() => {
-      //   this.$refs[`step${this.id}${this.todo.steps.length - 2}`].focus()
-      //   clearTimeout(i)
-      // }, 500)
-    },
-    updateSteps () {
-      this.todo.steps = this.todo.steps.filter(({ text }) => text)
     },
     updateStepsOrder () {
       for (let i = 0; i < this.todo.steps.length; i++) {
