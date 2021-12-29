@@ -61,23 +61,42 @@
               </div>
               <div
                 v-if="!todo.title.trim()"
-                class="is-family-secondary is-size-7 has-text-weight-semibold has-text-danger">
+                class="is-family-secondary is-size-7 has-text-weight-semibold has-text-danger pt-3">
                 Can't do it! Title is required ¯\_(ツ)_/¯
               </div>
             </div>
             <!-- Header -->
 
             <!-- Due date -->
-            <!-- <b-datetimepicker
+            <b-datetimepicker
               v-if="editModeIsActive"
               v-model="todo.dueDate"
-              rounded
-              placeholder="Click to select..."
-              icon="calendar-today"
-              icon-right
-              icon-right-clickable
-              horizontal-time-picker /> -->
-            <div class="due-date is-flex is-align-items-center">
+              placeholder="Click to select the due date ..."
+              icon="timer-outline"
+              :datetime-formatter="
+                (t) => this.$dayjs(t).format('dddd, MMMM D, YYYY h:mm A')
+              "
+              class="pt-4">
+              <template #left>
+                <b-button
+                  label="Now"
+                  type="is-primary"
+                  icon-left="clock"
+                  @click="todo.dueDate = new Date()" />
+              </template>
+
+              <template #right>
+                <b-button
+                  label="Clear"
+                  type="is-danger"
+                  icon-left="close"
+                  outlined
+                  @click="todo.dueDate = null" />
+              </template>
+            </b-datetimepicker>
+            <div
+              v-else-if="todo.dueDate"
+              class="due-date is-flex is-align-items-center pt-2">
               <div
                 v-if="!todoIsDone && due.iconsLength"
                 class="due-date__icon mr-2 is-flex is-align-items-center">
@@ -100,6 +119,7 @@
           <!-- Description -->
           <component
             :is="editModeIsActive ? 'b-input' : 'div'"
+            v-if="editModeIsActive || todo.description"
             v-model="todo.description"
             class="description mb-5"
             placeholder="Description">
@@ -299,6 +319,7 @@ export default {
     },
 
     parseDueDate () {
+      if (!this.todo.dueDate) return
       const diff = this.$dayjs().diff(this.todo.dueDate, 'day', true)
       const toBeVerb = diff > 0 ? 'was' : 'is'
 
@@ -326,7 +347,10 @@ export default {
         })
         : this.$dayjs(this.$dayjs(this.todo.dueDate)).fromNow()
 
-      this.due.date = `Due date ${toBeVerb} ${parsedDate}`
+      this.due.date =
+        parsedDate === 'NaN years ago'
+          ? null
+          : `Due date ${toBeVerb} ${parsedDate}`
     },
     togglePopUpCard ({ status, todoId }) {
       if (todoId !== this.id) return
@@ -379,7 +403,8 @@ export default {
           clearProps: 'x',
           repeat: 30,
           // onStart: () => { this.cardRef.style.opacity = 0 },
-          onComplete: () => this.updateCardIsShaking({ status: false, todoId: null })
+          onComplete: () =>
+            this.updateCardIsShaking({ status: false, todoId: null })
         }
       )
     },
@@ -429,18 +454,18 @@ export default {
     &-item
       border-radius: 0 0 1em 1em
 
-::v-deep .header
-  &,
-  input
-    font-weight: 700 !important
-    font-size: 1.5rem !important
-
-::v-deep .description
-  &,
-  input
-    font-weight: 700 !important
-
 ::v-deep
+  .header
+    &,
+    input
+      font-weight: 700 !important
+      font-size: 1.5rem !important
+
+  .description
+    &,
+    input
+      font-weight: 700 !important
+
   input
     padding: 0
     height: initial
@@ -454,6 +479,28 @@ export default {
     &:focus
       box-shadow: none
       border-color: rgba(0 0 0 / .25)
+
+  .datepicker
+    .dropdown .input[readonly],
+    .dropdown-trigger .input[readonly]
+      &,
+      &:focus
+        box-shadow: none
+        font-family: monospace !important
+        font-weight: bold
+        padding: 5px 0 5px 2em
+
+    // .control
+    //   > input
+    //     font-family: monospace !important
+    //     font-weight: bold
+    //     padding: 5px 0 5px 2.5em
+
+  .control.has-icons-left .icon,
+  .control.has-icons-right .icon
+      color: #4a4a4a !important
+      height: 2em !important
+      left: -.7em !important
 
 .due-date
   min-height: 26px

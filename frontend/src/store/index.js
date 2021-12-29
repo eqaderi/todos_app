@@ -6,17 +6,19 @@ import { debounce, cloneDeep, mapKeys, camelCase, snakeCase } from 'lodash'
 
 Vue.use(Vuex)
 
-const normalizeForJavascript = object => {
+const normalizeForJavascript = (object) => {
   const clone = cloneDeep(object)
   const normalizedObject = mapKeys(clone, (_, key) => camelCase(key))
-  normalizedObject.createdAt = new Date(normalizedObject.createdAt)
-  normalizedObject.dueDate = new Date(normalizedObject.dueDate)
+  normalizedObject.createdAt =
+    normalizedObject.createdAt && new Date(normalizedObject.createdAt)
+  normalizedObject.dueDate =
+    normalizedObject.dueDate && new Date(normalizedObject.dueDate)
   return normalizedObject
 }
-const normalizeForPython = object => {
+const normalizeForPython = (object) => {
   let normalizedObject = cloneDeep(object)
-  normalizedObject.createdAt = normalizedObject.createdAt.toISOString()
-  normalizedObject.dueDate = normalizedObject.dueDate.toISOString()
+  normalizedObject.createdAt = normalizedObject.createdAt?.toISOString()
+  normalizedObject.dueDate = normalizedObject.dueDate?.toISOString()
   normalizedObject = mapKeys(object, (_, key) => snakeCase(key))
   return normalizedObject
 }
@@ -103,7 +105,6 @@ export default new Vuex.Store({
     }
   },
   actions: {
-
     async loadTodos ({ commit }) {
       const commitLoaderUpdate = () =>
         commit('UPDATE_LOADER', { status: true, todoId: 'all' })
@@ -119,7 +120,7 @@ export default new Vuex.Store({
       commit('UPDATE_LOADER', { status: false, todoId: 'all' })
     },
 
-    updateTodo: pDebounce(async ({ commit, dispatch }, todoObj) => {
+    updateTodo: pDebounce(async ({ commit, state, dispatch }, todoObj) => {
       const commitLoaderUpdate = () =>
         commit('UPDATE_LOADER', { status: true, todoId: todoObj.id })
       const debouncedCommitLoaderUpdate = debounce(commitLoaderUpdate, 500)
@@ -128,10 +129,20 @@ export default new Vuex.Store({
       let rawTodo = {}
       try {
         rawTodo = await updateTodo(pyNormalized)
-        commit('SET_ERROR', { code: null, message: '' })
+        if (state.error.code) {
+          commit('SET_ERROR', {
+            code: null,
+            message: '',
+            todoIs: null
+          })
+        }
       } catch (error) {
         commit('UPDATE_LOADER', { status: false, todoId: todoObj.id })
-        dispatch('toggleError', { code: error.code, message: error.message, todoId: todoObj.id })
+        dispatch('toggleError', {
+          code: error.code,
+          message: error.message,
+          todoId: todoObj.id
+        })
         commit('SET_SHAKE', { status: true, todoId: todoObj.id })
 
         throw error
@@ -174,11 +185,11 @@ export default new Vuex.Store({
     }
   },
   getters: {
-    todoIds: state => {
-      return state.todos.map(todo => todo.id)
+    todoIds: (state) => {
+      return state.todos.map((todo) => todo.id)
     },
     getTodoById: (state) => (id) => {
-      return state.todos.find(todo => todo.id === id)
+      return state.todos.find((todo) => todo.id === id)
     }
   },
   modules: {}

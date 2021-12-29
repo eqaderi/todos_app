@@ -178,8 +178,9 @@ export function updateTodo (req) {
       }
 
       todos[index] = JSON.parse(JSON.stringify(req))
-      // resolve(todos[index])
-      reject(new Error('errrorrrrr'))
+      // console.log(todos)
+      resolve(todos[index])
+      // reject(new Error('You are not connected!'))
     }, 1000)
   })
 }
