@@ -2,7 +2,12 @@
   <div
     :id="`card${id}parent`"
     :ref="`card${id}parent`"
-    class="card-parent">
+    :class="[
+      disableInteraction.todoId !== id && disableInteraction.status
+        ? 'disable-card'
+        : '',
+      'card-parent',
+    ]">
     <div
       :ref="`card${id}`"
       class="card-wrapper">
@@ -217,7 +222,8 @@ export default {
       'cardPoppedUp',
       'formValidationStatus',
       'cardIsShaking',
-      'error'
+      'error',
+      'disableInteraction'
     ]),
     isLoading () {
       return this.loader.status && this.loader.todoId === this.todo.id
@@ -306,13 +312,15 @@ export default {
       'updateBackdrop',
       'updateCardPoppedUp',
       'updateFormValidationStatus',
-      'updateCardIsShaking'
+      'updateCardIsShaking',
+      'updateDisableInteraction'
     ]),
     toggleDone () {
       this.todo.done = !this.todo.done
       this.updateTodoAndFetch()
     },
     updateTodoAndFetch () {
+      this.updateDisableInteraction({ status: true, todoId: this.id })
       this.updateTodo(this.todo).finally(() => {
         this.todo = cloneDeep(this.todop)
       })
@@ -431,11 +439,30 @@ export default {
 }
 </script>
 <style lang="sass" scoped>
+.disable-card
+  position: relative
+  pointer-events: none
+  opacity: .9
+  .is-clickable
+    pointer-events: none !important
+  .card
+    box-shadow: none !important
+  &::after
+    content: ''
+    position: absolute
+    left:0
+    right:0
+    top:0
+    bottom:0
+    z-index:1
+    background: transparent
+
 .border-top
   border-width: 1px 0 0
   border-color: transparent
   border-style: solid
   border-color: rgba(0 0 0 / .05)
+
 .card,
 .loading-overlay,
 .card-wrapper

@@ -66,6 +66,10 @@ export default new Vuex.Store({
       code: null,
       message: '',
       todoIs: null
+    },
+    disableInteraction: {
+      status: false,
+      todoId: null
     }
   },
   mutations: {
@@ -102,6 +106,10 @@ export default new Vuex.Store({
       state.error.code = code
       state.error.message = message
       state.error.todoId = todoId
+    },
+    SET_DISABLE_INTERACTION (state, { status, todoId }) {
+      state.disableInteraction.status = status
+      state.disableInteraction.todoId = todoId
     }
   },
   actions: {
@@ -121,10 +129,12 @@ export default new Vuex.Store({
     },
 
     updateTodo: pDebounce(async ({ commit, state, dispatch }, todoObj) => {
+      // commit('SET_DISABLE_INTERACTION', { status: true, todoId: todoObj.id })
       const commitLoaderUpdate = () =>
         commit('UPDATE_LOADER', { status: true, todoId: todoObj.id })
       const debouncedCommitLoaderUpdate = debounce(commitLoaderUpdate, 500)
       debouncedCommitLoaderUpdate()
+
       const pyNormalized = normalizeForPython(todoObj)
       let rawTodo = {}
       try {
@@ -146,6 +156,8 @@ export default new Vuex.Store({
         commit('SET_SHAKE', { status: true, todoId: todoObj.id })
 
         throw error
+      } finally {
+        commit('SET_DISABLE_INTERACTION', { status: false, todoId: null })
       }
 
       debouncedCommitLoaderUpdate.cancel()
@@ -169,6 +181,10 @@ export default new Vuex.Store({
 
     updateCardIsShaking ({ commit }, payload) {
       commit('SET_SHAKE', payload)
+    },
+
+    updateDisableInteraction ({ commit }, payload) {
+      commit('SET_DISABLE_INTERACTION', payload)
     },
 
     toggleError ({ commit }, payload) {
