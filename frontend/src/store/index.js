@@ -5,6 +5,7 @@ import { debounce } from 'lodash'
 import pDebounce from 'p-debounce'
 
 Vue.use(Vuex)
+let sti = null
 
 export default new Vuex.Store({
   state: {
@@ -35,8 +36,19 @@ export default new Vuex.Store({
       status: false,
       todoId: null
     },
-    formIsValid: true,
-    cardIsShaking: false
+    formValidationStatus: {
+      status: true,
+      todoId: null
+    },
+    cardIsShaking: {
+      status: true,
+      todoId: null
+    },
+    error: {
+      code: null,
+      message: '',
+      todoIs: null
+    }
   },
   mutations: {
     SET_TODOS (state, payload) {
@@ -63,11 +75,18 @@ export default new Vuex.Store({
       state.cardPoppedUp.status = status
       state.cardPoppedUp.todoId = todoId
     },
-    SET_FORM_IS_VALID (state, status) {
-      state.formIsValid = status
+    SET_FORM_IS_VALID (state, { status, todoId }) {
+      state.formValidationStatus.status = status
+      state.formValidationStatus.todoId = todoId
     },
-    SET_SHAKE (state, status) {
-      state.cardIsShaking = status
+    SET_SHAKE (state, { status, todoId }) {
+      state.cardIsShaking.status = status
+      state.cardIsShaking.todoId = todoId
+    },
+    SET_ERROR (state, { code, message, todoId }) {
+      state.error.code = code
+      state.error.message = message
+      state.error.todoId = todoId
     }
   },
   actions: {
@@ -86,7 +105,7 @@ export default new Vuex.Store({
       commit('SET_TODOS', { todos })
       commit('UPDATE_LOADER', { status: false, todoId: 'all' })
     },
-    updateTodo: pDebounce(async ({ commit }, todoObj) => {
+    updateTodo: pDebounce(async ({ commit, dispatch }, todoObj) => {
       const commitLoaderUpdate = () =>
         commit('UPDATE_LOADER', { status: true, todoId: todoObj.id })
       const debouncedCommitLoaderUpdate = debounce(commitLoaderUpdate, 500)
@@ -94,8 +113,12 @@ export default new Vuex.Store({
       let todo = []
       try {
         todo = await updateTodo(todoObj)
+        commit('SET_ERROR', { code: null, message: '' })
       } catch (error) {
         commit('UPDATE_LOADER', { status: false, todoId: todoObj.id })
+        dispatch('toggleError', { code: error.code, message: error.message, todoId: todoObj.id })
+        commit('SET_SHAKE', { status: true, todoId: todoObj.id })
+
         throw error
       }
       debouncedCommitLoaderUpdate.cancel()
@@ -108,11 +131,23 @@ export default new Vuex.Store({
     updateCardPoppedUp ({ commit }, payload) {
       commit('SET_CARD_POPPED_UP', payload)
     },
-    updateFormIsValid ({ commit }, status) {
-      commit('SET_FORM_IS_VALID', status)
+    updateformValidationStatus ({ commit }, payload) {
+      commit('SET_FORM_IS_VALID', payload)
     },
-    updateCardIsShaking ({ commit }, status) {
-      commit('SET_SHAKE', status)
+    updateCardIsShaking ({ commit }, payload) {
+      commit('SET_SHAKE', payload)
+    },
+    toggleError ({ commit }, payload) {
+      clearTimeout(sti)
+      commit('SET_ERROR', payload)
+
+      sti = setTimeout(() => {
+        commit('SET_ERROR', {
+          code: null,
+          message: '',
+          todoIs: null
+        })
+      }, 1)
     }
   },
   getters: {

@@ -179,7 +179,7 @@ export function updateTodo (req) {
       console.log({ req })
       todos[index] = JSON.parse(JSON.stringify(req))
       resolve(todos[index])
-      // reject(new Error('nope'))
+      // reject(new Error('errrorrrrr'))
     }, 1000)
   })
 }

@@ -77,8 +77,7 @@
               icon-right
               icon-right-clickable
               horizontal-time-picker /> -->
-            <div
-              class="due-date is-flex is-align-items-center">
+            <div class="due-date is-flex is-align-items-center">
               <div
                 v-if="!todoIsDone && due.iconsLength"
                 class="due-date__icon mr-2 is-flex is-align-items-center">
@@ -121,7 +120,7 @@
               @step:update="updateTodoAndFetch"
               @step:delete="deleteStep"
               @step:add="addStep" />
-          <!-- TodoStep -->
+            <!-- TodoStep -->
           </div>
         </div>
 
@@ -193,7 +192,13 @@ export default {
     }
   },
   computed: {
-    ...mapState(['loader', 'cardPoppedUp', 'formIsValid', 'cardIsShaking']),
+    ...mapState([
+      'loader',
+      'cardPoppedUp',
+      'formValidationStatus',
+      'cardIsShaking',
+      'error'
+    ]),
     isLoading () {
       return this.loader.status && this.loader.todoId === this.todo.id
     },
@@ -234,9 +239,13 @@ export default {
         this.togglePopUpCard(value)
       }
     },
-    cardIsShaking (value) {
-      if (value) {
-        this.shake()
+    cardIsShaking: {
+      deep: true,
+      handler ({ status, todoId }) {
+        console.log({ status, todoId })
+        if (status && todoId === this.id) {
+          this.shake()
+        }
       }
     },
     todop: {
@@ -248,10 +257,10 @@ export default {
       }
     },
     'todo.title' (value) {
-      if (this.formIsValid && !value.trim()) {
-        this.updateFormIsValid(false)
-      } else if (!this.formIsValid && value.trim()) {
-        this.updateFormIsValid(true)
+      if (this.formValidationStatus.status && !value.trim()) {
+        this.updateformValidationStatus({ status: false, todoId: this.id })
+      } else if (!this.formValidationStatus.status && value.trim()) {
+        this.updateformValidationStatus({ status: true, todoId: this.id })
       }
     }
   },
@@ -278,7 +287,7 @@ export default {
       'updateTodo',
       'updateBackdrop',
       'updateCardPoppedUp',
-      'updateFormIsValid',
+      'updateformValidationStatus',
       'updateCardIsShaking'
     ]),
     toggleDone () {
@@ -287,11 +296,10 @@ export default {
     },
     updateTodoAndFetch () {
       console.log('xxx', this.todo.steps)
-      this.updateTodo(this.todo)
-        .finally(() => {
-          console.log('finally')
-          this.todo = cloneDeep(this.todop)
-        })
+      this.updateTodo(this.todo).finally(() => {
+        console.log('finally')
+        this.todo = cloneDeep(this.todop)
+      })
     },
     // updateTodoAndFetch () { this.updateTodo(this.todo) },
     // console.log(1, 'call action', this.todo)
@@ -377,7 +385,6 @@ export default {
       })
     },
     shake () {
-      if (this.cardPoppedUp.todoId !== this.id) return
       this.$gsap.fromTo(
         this.cardRef,
         { x: -5 },
@@ -387,7 +394,7 @@ export default {
           clearProps: 'x',
           repeat: 30,
           // onStart: () => { this.cardRef.style.opacity = 0 },
-          onComplete: () => this.updateCardIsShaking(false)
+          onComplete: () => this.updateCardIsShaking({ status: false, todoId: null })
         }
       )
     },

@@ -7,12 +7,12 @@
 <script>
 import { mapState, mapActions } from 'vuex'
 export default {
-  computed: mapState(['cardPoppedUp', 'formIsValid']),
+  computed: mapState(['cardPoppedUp', 'formValidationStatus']),
   methods: {
     ...mapActions(['updateBackdrop', 'updateCardPoppedUp', 'updateCardIsShaking']),
     turnOff () {
-      if (!this.formIsValid) {
-        this.updateCardIsShaking(true)
+      if (!this.formValidationStatus.status) {
+        this.updateCardIsShaking({ status: true, todoId: this.formValidationStatus.todoId })
         return
       }
       this.updateBackdrop(false)
