@@ -1,10 +1,26 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import { fetchTodos, updateTodo } from '@/api'
-import { debounce } from 'lodash'
 import pDebounce from 'p-debounce'
+import { debounce, cloneDeep, mapKeys, camelCase, snakeCase } from 'lodash'
 
 Vue.use(Vuex)
+
+const normalizeForJavascript = object => {
+  const clone = cloneDeep(object)
+  const normalizedObject = mapKeys(clone, (_, key) => camelCase(key))
+  normalizedObject.createdAt = new Date(normalizedObject.createdAt)
+  normalizedObject.dueDate = new Date(normalizedObject.dueDate)
+  return normalizedObject
+}
+const normalizeForPython = object => {
+  let normalizedObject = cloneDeep(object)
+  normalizedObject.createdAt = normalizedObject.createdAt.toISOString()
+  normalizedObject.dueDate = normalizedObject.dueDate.toISOString()
+  normalizedObject = mapKeys(object, (_, key) => snakeCase(key))
+  return normalizedObject
+}
+
 let sti = null
 
 export default new Vuex.Store({
@@ -52,7 +68,6 @@ export default new Vuex.Store({
   },
   mutations: {
     SET_TODOS (state, payload) {
-      // state.todos = payload.todos
       payload.todos.forEach((element, index) => {
         Vue.set(state.todos, index, element)
       })
@@ -61,12 +76,10 @@ export default new Vuex.Store({
       state.loader.status = status
       state.loader.todoId = todoId
     },
-    UPDATE_TODO (state, { todo }) {
-      // console.log(4, 'commit mutation', todo)
-      const todoId = todo.id
+    UPDATE_TODO (state, payload) {
+      const todoId = payload.id
       const index = state.todos.findIndex(({ id }) => +id === +todoId)
-      Vue.set(state.todos, index, todo)
-      // state.todos[index] = todo
+      Vue.set(state.todos, index, payload)
     },
     SET_BACKDROP (state, status) {
       state.backdrop = status
@@ -90,29 +103,31 @@ export default new Vuex.Store({
     }
   },
   actions: {
+
     async loadTodos ({ commit }) {
       const commitLoaderUpdate = () =>
         commit('UPDATE_LOADER', { status: true, todoId: 'all' })
       const debounced = debounce(commitLoaderUpdate, 500)
 
       debounced()
-      const todos = await fetchTodos()
+      const rawTodos = await fetchTodos()
+      const todos = rawTodos.map(normalizeForJavascript)
       debounced.cancel()
-
-      // const todos = await fetchTodos()
 
       debounced.cancel()
       commit('SET_TODOS', { todos })
       commit('UPDATE_LOADER', { status: false, todoId: 'all' })
     },
+
     updateTodo: pDebounce(async ({ commit, dispatch }, todoObj) => {
       const commitLoaderUpdate = () =>
         commit('UPDATE_LOADER', { status: true, todoId: todoObj.id })
       const debouncedCommitLoaderUpdate = debounce(commitLoaderUpdate, 500)
       debouncedCommitLoaderUpdate()
-      let todo = []
+      const pyNormalized = normalizeForPython(todoObj)
+      let rawTodo = {}
       try {
-        todo = await updateTodo(todoObj)
+        rawTodo = await updateTodo(pyNormalized)
         commit('SET_ERROR', { code: null, message: '' })
       } catch (error) {
         commit('UPDATE_LOADER', { status: false, todoId: todoObj.id })
@@ -121,22 +136,30 @@ export default new Vuex.Store({
 
         throw error
       }
+
       debouncedCommitLoaderUpdate.cancel()
-      commit('UPDATE_TODO', { todo })
+
+      const todo = normalizeForJavascript(rawTodo)
+      commit('UPDATE_TODO', todo)
       commit('UPDATE_LOADER', { status: false, todoId: todoObj.id })
     }, 1000),
+
     updateBackdrop ({ commit }, status) {
       commit('SET_BACKDROP', status)
     },
+
     updateCardPoppedUp ({ commit }, payload) {
       commit('SET_CARD_POPPED_UP', payload)
     },
-    updateformValidationStatus ({ commit }, payload) {
+
+    updateFormValidationStatus ({ commit }, payload) {
       commit('SET_FORM_IS_VALID', payload)
     },
+
     updateCardIsShaking ({ commit }, payload) {
       commit('SET_SHAKE', payload)
     },
+
     toggleError ({ commit }, payload) {
       clearTimeout(sti)
       commit('SET_ERROR', payload)

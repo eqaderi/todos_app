@@ -242,7 +242,6 @@ export default {
     cardIsShaking: {
       deep: true,
       handler ({ status, todoId }) {
-        console.log({ status, todoId })
         if (status && todoId === this.id) {
           this.shake()
         }
@@ -252,15 +251,14 @@ export default {
       immediate: true,
       deep: true,
       handler (newValue, oldValue) {
-        console.log('watch')
         if (!isEqual(newValue, oldValue)) this.todo = cloneDeep(newValue)
       }
     },
     'todo.title' (value) {
       if (this.formValidationStatus.status && !value.trim()) {
-        this.updateformValidationStatus({ status: false, todoId: this.id })
+        this.updateFormValidationStatus({ status: false, todoId: this.id })
       } else if (!this.formValidationStatus.status && value.trim()) {
-        this.updateformValidationStatus({ status: true, todoId: this.id })
+        this.updateFormValidationStatus({ status: true, todoId: this.id })
       }
     }
   },
@@ -287,7 +285,7 @@ export default {
       'updateTodo',
       'updateBackdrop',
       'updateCardPoppedUp',
-      'updateformValidationStatus',
+      'updateFormValidationStatus',
       'updateCardIsShaking'
     ]),
     toggleDone () {
@@ -295,24 +293,11 @@ export default {
       this.updateTodoAndFetch()
     },
     updateTodoAndFetch () {
-      console.log('xxx', this.todo.steps)
       this.updateTodo(this.todo).finally(() => {
-        console.log('finally')
         this.todo = cloneDeep(this.todop)
       })
     },
-    // updateTodoAndFetch () { this.updateTodo(this.todo) },
-    // console.log(1, 'call action', this.todo)
-    // this.todo.steps[index].done = done
 
-    // .then((rs) => {
-    //   console.log(5, 'call action result', this.todo)
-    //   // Object.assign({}, this.todo, this.getTodoById()(this.id))
-    //   // console.log(6, 'after assign', this.todo)
-
-    // this.todoInfoBefore = cloneDeep(this.todo)
-    // })
-    // },
     parseDueDate () {
       const diff = this.$dayjs().diff(this.todo.dueDate, 'day', true)
       const toBeVerb = diff > 0 ? 'was' : 'is'
@@ -441,6 +426,8 @@ export default {
     top: 100%
     overflow: hidden
     border-radius: 0 0 1em 1em
+    &-item
+      border-radius: 0 0 1em 1em
 
 ::v-deep .header
   &,

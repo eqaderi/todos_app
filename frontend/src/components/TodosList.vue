@@ -31,12 +31,11 @@ export default {
 <style lang="sass" scoped>
 #pop-up-container
   position: fixed
-  // overflow: hidden
   border-radius: 1em
-  top: 20vh
-  bottom: 20vh
+  top: 15vh
   left: 25vw
   right: 25vw
+  // transform: translateY(-50%)
   z-index: 1000
   visibility: hidden
 </style>
