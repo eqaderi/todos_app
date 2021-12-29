@@ -1,7 +1,7 @@
 const todos = [
   {
     id: 1,
-    createdAt: '2021-12-25T13:42:22.000Z',
+    created_at: '2021-12-25T13:42:22.000Z',
     tags: ['home'],
     color: '#53db89',
     title: 'Clean the kitchen',
@@ -18,12 +18,12 @@ const todos = [
         done: false
       }
     ],
-    dueDate: '2021-12-27T14:02:33.000Z',
+    due_date: '2021-12-27T14:02:33.000Z',
     done: false
   },
   {
     id: 2,
-    createdAt: '2021-12-26T13:42:22.000Z',
+    created_at: '2021-12-26T13:42:22.000Z',
     tags: ['work', 'home', 'fun'],
     color: '#f98a4b',
     title: 'Wash the car',
@@ -50,12 +50,12 @@ const todos = [
         done: false
       }
     ],
-    dueDate: '2021-12-27T15:58:32.282Z',
+    due_date: '2021-12-27T15:58:32.282Z',
     done: false
   },
   {
     id: 3,
-    createdAt: '2021-12-26T13:42:22.000Z',
+    created_at: '2021-12-26T13:42:22.000Z',
     tags: ['work'],
     color: '#f94a9b',
     title: 'Wash the car',
@@ -72,12 +72,12 @@ const todos = [
         done: false
       }
     ],
-    dueDate: '2021-12-28T20:43:56.000Z',
+    due_date: '2021-12-28T20:43:56.000Z',
     done: false
   },
   {
     id: 4,
-    createdAt: '2021-12-26T13:42:22.000Z',
+    created_at: '2021-12-26T13:42:22.000Z',
     tags: ['work'],
     color: '#d1ea4b',
     title: 'Wash the car',
@@ -94,12 +94,12 @@ const todos = [
         done: false
       }
     ],
-    dueDate: '2021-12-30T13:44:56.000Z',
+    due_date: '2021-12-30T13:44:56.000Z',
     done: false
   },
   {
     id: 5,
-    createdAt: '2021-12-26T13:42:22.000Z',
+    created_at: '2021-12-26T13:42:22.000Z',
     tags: ['work'],
     color: '#f98acb',
     title: 'Wash the car',
@@ -116,12 +116,12 @@ const todos = [
         done: false
       }
     ],
-    dueDate: '2022-01-08T13:12:53.000Z',
+    due_date: '2022-01-08T13:12:53.000Z',
     done: false
   },
   {
     id: 6,
-    createdAt: '2021-12-26T13:42:22.000Z',
+    created_at: '2021-12-26T13:42:22.000Z',
     tags: ['work'],
     color: '#098afb',
     title: 'Wash the car',
@@ -138,7 +138,7 @@ const todos = [
         done: false
       }
     ],
-    dueDate: '2022-01-08T13:12:53.000Z',
+    due_date: '2022-01-08T13:12:53.000Z',
     done: false
   }
 ]
@@ -176,9 +176,9 @@ export function updateTodo (req) {
           })
         }
       }
-
+      console.log({ req })
       todos[index] = JSON.parse(JSON.stringify(req))
       resolve(todos[index])
-    }, 2000)
+    }, 1000)
   })
 }

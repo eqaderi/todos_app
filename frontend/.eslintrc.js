@@ -2,6 +2,7 @@ module.exports = {
   root: true,
 
   env: {
+    browser: true,
     node: true
   },
 
@@ -9,13 +10,13 @@ module.exports = {
     'standard',
     'plugin:vue/essential',
     '@vue/standard',
-    "plugin:vue/strongly-recommended",
-    "plugin:vue/recommended"
+    'plugin:vue/strongly-recommended',
+    'plugin:vue/recommended'
   ],
 
   parserOptions: {
     parser: 'babel-eslint',
-    'ecmaVersion': 2022
+    ecmaVersion: 2022
   },
 
   rules: {
@@ -27,7 +28,7 @@ module.exports = {
     'vue/singleline-html-element-content-newline': 'off',
     'vue/html-closing-bracket-newline': ['error', {
       singleline: 'never',
-      multiline: 'never',
-    }],
-  },
+      multiline: 'never'
+    }]
+  }
 }

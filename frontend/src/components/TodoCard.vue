@@ -35,17 +35,6 @@
           <!-- Actions -->
 
           <div class="mb-5">
-            <!-- Tags -->
-            <b-taglist class="mb-0">
-              <b-tag
-                v-for="tag in todo.tags"
-                :key="tag"
-                type="is-light">
-                {{ tag }}
-              </b-tag>
-            </b-taglist>
-            <!-- Tags -->
-
             <!-- Header -->
             <div class="my-3">
               <div
@@ -76,17 +65,20 @@
                 Can't do it! Title is required ¯\_(ツ)_/¯
               </div>
             </div>
-            <!-- <h3
-            :class="[
-              todoIsDone ? 'is-step-done' : '',
-              'has-text-weight-bold is-size-4',
-            ]">
-            {{ todo.title }}
-          </h3> -->
             <!-- Header -->
 
             <!-- Due date -->
-            <div class="due-date is-flex is-align-items-center">
+            <!-- <b-datetimepicker
+              v-if="editModeIsActive"
+              v-model="todo.dueDate"
+              rounded
+              placeholder="Click to select..."
+              icon="calendar-today"
+              icon-right
+              icon-right-clickable
+              horizontal-time-picker /> -->
+            <div
+              class="due-date is-flex is-align-items-center">
               <div
                 v-if="!todoIsDone && due.iconsLength"
                 class="due-date__icon mr-2 is-flex is-align-items-center">
@@ -107,32 +99,40 @@
           </div>
 
           <!-- Description -->
-          <div class="content has-text-weight-semibold has-height-transitioned">
+          <component
+            :is="editModeIsActive ? 'b-input' : 'div'"
+            v-model="todo.description"
+            class="description has-height-transitioned mb-5"
+            placeholder="Description">
             {{ todo.description }}
-          </div>
+          </component>
           <!-- Description -->
 
           <!-- TodoStep -->
-          <TodoStep
-            v-for="(step, index) in todo.steps"
-            :key="step.order"
-            :index="index"
-            :steps-length="todo.steps.length"
-            :step="step"
-            :edit-mode-is-active="editModeIsActive"
-            @step:delete="deleteStep"
-            @step:add="addStep" />
+          <div :class="[editModeIsActive ? 'border-top' : '']">
+            <TodoStep
+              v-for="(step, index) in todo.steps"
+              :key="step.order"
+              :index="index"
+              :steps-length="todo.steps.length"
+              :step="step"
+              :steps="todo.steps"
+              :edit-mode-is-active="editModeIsActive"
+              @step:update="updateTodoAndFetch"
+              @step:delete="deleteStep"
+              @step:add="addStep" />
           <!-- TodoStep -->
+          </div>
         </div>
 
         <footer
           class="card-footer has-text-weight-semibold"
           :style="{ borderColor, backgroundColor: lighterColor }">
           <!-- <span
-        class="card-footer-item is-clickable"
-        :style="{ borderColor }">
-        Edit
-      </span> -->
+                class="card-footer-item is-clickable"
+                :style="{ borderColor }">
+                Edit
+              </span> -->
           <div
             :class="[
               todoIsDone ? 'is-done' : '',
@@ -163,7 +163,7 @@
 
 <script>
 import { mapState, mapActions, mapGetters } from 'vuex'
-import { cloneDeep, isEqual } from 'lodash'
+import { cloneDeep, isEqual, debounce } from 'lodash'
 import TodoStep from './TodoStep.vue'
 
 export default {
@@ -252,9 +252,9 @@ export default {
   },
   created () {
     this.todo = cloneDeep(this.getTodoById()(this.id))
-    this.parseDueDateR()
+    this.parseDueDate()
     this.intervalId = setInterval(() => {
-      this.parseDueDateR()
+      this.parseDueDate()
     }, 60000)
   },
   beforeDestroy () {
@@ -282,12 +282,23 @@ export default {
       this.todo.done = !this.todo.done
       this.updateTodoAndFetch()
     },
-    updateTodoAndFetch () {
-      this.updateTodo(this.todo).then(() => {
-        Object.assign({}, this.todo, this.getTodoById()(this.id))
-      })
-    },
-    parseDueDateR () {
+    updateTodoAndFetch: debounce(function () {
+      console.log('xxx', this.todo)
+      this.updateTodo(this.todo)
+    }, 1000),
+    // updateTodoAndFetch () { this.updateTodo(this.todo) },
+    // console.log(1, 'call action', this.todo)
+    // this.todo.steps[index].done = done
+
+    // .then((rs) => {
+    //   console.log(5, 'call action result', this.todo)
+    //   // Object.assign({}, this.todo, this.getTodoById()(this.id))
+    //   // console.log(6, 'after assign', this.todo)
+
+    // this.todoInfoBefore = cloneDeep(this.todo)
+    // })
+    // },
+    parseDueDate () {
       const diff = this.$dayjs().diff(this.todo.dueDate, 'day', true)
       const toBeVerb = diff > 0 ? 'was' : 'is'
 
@@ -303,6 +314,9 @@ export default {
       } else if (diff <= -2 && diff > -4) {
         this.due.color = '#fdd835'
         this.due.iconsLength = 1
+      } else {
+        this.due.color = ''
+        this.due.iconsLength = 0
       }
 
       const differenceIsADayOrMore = Math.abs(diff) >= 0.5
@@ -334,6 +348,7 @@ export default {
         if (!isEqual(this.todo, this.todoInfoBefore)) {
           this.updateStepsOrder()
           this.updateTodoAndFetch()
+          this.parseDueDate()
         }
       }
 
@@ -383,6 +398,7 @@ export default {
         text: '',
         done: false
       })
+      this.updateStepsOrder()
     },
     updateStepsOrder () {
       for (let i = 0; i < this.todo.steps.length; i++) {
@@ -393,6 +409,11 @@ export default {
 }
 </script>
 <style lang="sass" scoped>
+.border-top
+  border-width: 1px 0 0
+  border-color: transparent
+  border-style: solid
+  border-color: rgba(0 0 0 / .05)
 .card,
 .loading-overlay,
 .card-wrapper
@@ -410,9 +431,9 @@ export default {
     border-radius: 0 0 1em 1em
 
 .pop-up
-  .card
-    overflow-y: auto
-    overflow-x: hidden
+  // .card
+  //   overflow-y: auto
+  //   overflow-x: hidden
 
 .has-height-transitioned
   transition: all 0.3s ease-out
@@ -424,6 +445,14 @@ export default {
   input
     font-weight: 700 !important
     font-size: 1.5rem !important
+
+::v-deep .description
+  &,
+  input
+    font-weight: 700 !important
+
+::v-deep
+  input
     padding: 0
     height: initial
     background-color: initial
@@ -434,6 +463,7 @@ export default {
     color: currentColor
     &:hover,
     &:focus
+      box-shadow: none
       border-color: rgba(0 0 0 / .25)
 
 .due-date
