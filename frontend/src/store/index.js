@@ -1,29 +1,31 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import { fetchTodos, updateTodo } from '@/api'
-import { debounce, cloneDeep, mapKeys, camelCase, snakeCase } from 'lodash'
-// import pDebounce from 'p-debounce'
+import { debounce } from 'lodash'
+import pDebounce from 'p-debounce'
 
 Vue.use(Vuex)
 
-const normalizeForJavascript = object => {
-  const clone = cloneDeep(object)
-  const normalizedObject = mapKeys(clone, (_, key) => camelCase(key))
-  // normalizedObject.createdAt = new Date(normalizedObject.createdAt)
-  // normalizedObject.dueDate = new Date(normalizedObject.dueDate)
-  return normalizedObject
-}
-const normalizeForPython = object => {
-  let normalizedObject = cloneDeep(object)
-  // normalizedObject.createdAt = normalizedObject.createdAt.toISOString()
-  // normalizedObject.dueDate = normalizedObject.dueDate.toISOString()
-  normalizedObject = mapKeys(object, (_, key) => snakeCase(key))
-  return normalizedObject
-}
-
 export default new Vuex.Store({
   state: {
-    todos: [],
+    todos: [
+      // {
+      //   id: 0,
+      //   createdAt: null,
+      //   color: '#ffffff',
+      //   title: '',
+      //   description: '',
+      //   steps: [
+      //     {
+      //       order: null,
+      //       text: '',
+      //       done: false
+      //     }
+      //   ],
+      //   dueDate: null,
+      //   done: false
+      // }
+    ],
     loader: {
       status: false,
       todoId: null
@@ -38,7 +40,10 @@ export default new Vuex.Store({
   },
   mutations: {
     SET_TODOS (state, payload) {
-      state.todos = payload.todos
+      // state.todos = payload.todos
+      payload.todos.forEach((element, index) => {
+        Vue.set(state.todos, index, element)
+      })
     },
     UPDATE_LOADER (state, { status, todoId }) {
       state.loader.status = status
@@ -72,55 +77,31 @@ export default new Vuex.Store({
       const debounced = debounce(commitLoaderUpdate, 500)
 
       debounced()
-      const response = await fetchTodos()
+      const todos = await fetchTodos()
       debounced.cancel()
 
-      const todos = response.map(normalizeForJavascript)
+      // const todos = await fetchTodos()
 
+      debounced.cancel()
       commit('SET_TODOS', { todos })
       commit('UPDATE_LOADER', { status: false, todoId: 'all' })
     },
-    updateTodo: async ({ commit }, todoObj) => {
+    updateTodo: pDebounce(async ({ commit }, todoObj) => {
       const commitLoaderUpdate = () =>
         commit('UPDATE_LOADER', { status: true, todoId: todoObj.id })
       const debouncedCommitLoaderUpdate = debounce(commitLoaderUpdate, 500)
-      const request = normalizeForPython(todoObj)
-      // console.log(2, 'call api', request)
       debouncedCommitLoaderUpdate()
-      console.log({ request })
-      const response = await updateTodo(request)
+      let todo = []
+      try {
+        todo = await updateTodo(todoObj)
+      } catch (error) {
+        commit('UPDATE_LOADER', { status: false, todoId: todoObj.id })
+        throw error
+      }
       debouncedCommitLoaderUpdate.cancel()
-
-      const todo = normalizeForJavascript(response)
-
-      // console.log(3, 'result of api call', todo)
-
       commit('UPDATE_TODO', { todo })
       commit('UPDATE_LOADER', { status: false, todoId: todoObj.id })
-    },
-
-    // updateTodo: debounce(
-    //   () => {
-    //     return async ({ commit }, todoObj) => {
-    //       const commitLoaderUpdate = () =>
-    //         commit('UPDATE_LOADER', { status: true, todoId: todoObj.id })
-    //       const debouncedCommitLoaderUpdate = debounce(commitLoaderUpdate, 500)
-    //       const request = normalizeForPython(todoObj)
-    //       console.log({ request })
-    //       debouncedCommitLoaderUpdate()
-    //       const response = await updateTodo(request)
-    //       debouncedCommitLoaderUpdate.cancel()
-
-    //       const todo = normalizeForJavascript(response)
-
-    //       console.log({ todo })
-
-    //       commit('UPDATE_TODO', { todo })
-    //       commit('UPDATE_LOADER', { status: false, todoId: todoObj.id })
-    //     }
-    //   },
-    //   2000
-    // ),
+    }, 1000),
     updateBackdrop ({ commit }, status) {
       commit('SET_BACKDROP', status)
     },

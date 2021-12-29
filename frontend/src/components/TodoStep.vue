@@ -11,7 +11,7 @@
       class="checkbox-is-transparent step-check"
       type="is-light"
       size="is-small"
-      @input="$emit('step:update')">
+      @input="updateDone">
       <div
         v-if="!editModeIsActive"
         :class="[step.done ? 'is-step-done' : '', 'is-size-6']">
@@ -65,12 +65,12 @@ export default {
       if (!value) this.$emit('step:delete', this.index)
       else if (this.index === this.stepsLength - 1) this.$emit('step:add')
     }
+  },
+  methods: {
+    updateDone () {
+      if (!this.editModeIsActive) this.$emit('step:update')
+    }
   }
-  // methods: {
-  //   checkStep () {
-  //     if (!this.editModeIsActive) this.$emit('step:update', { step: this.step, index: this.index })
-  //   }
-  // }
 }
 </script>
 
@@ -84,22 +84,21 @@ export default {
     border-color: rgba(0 0 0 / .25)
 
 ::v-deep
-  .step-check
-    input
-      // font-weight: 700 !important
-      // font-size: 1.5rem !important
-      padding: 5px 0 !important
+  input
+    // font-weight: 700 !important
+    // font-size: 1.5rem !important
+    padding: 5px 0 !important
 
-      // height: initial
-      // background-color: initial
-      // border-color: transparent
-      border-width: 0 !important
-      // border-radius: 0
-      // box-shadow: none
-      // color: currentColor
-      // &:hover,
-      // &:focus
-      //   box-shadow: none
+    // height: initial
+    // background-color: initial
+    // border-color: transparent
+    border-width: 0 !important
+    // border-radius: 0
+    // box-shadow: none
+    // color: currentColor
+    // &:hover,
+    // &:focus
+    //   box-shadow: none
 
   .checkbox-is-transparent
     input[type=checkbox]:checked + .check

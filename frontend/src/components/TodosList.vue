@@ -4,22 +4,24 @@
       id="pop-up-container"
       ref="pop-up-container" />
     <div
-      v-for="id in todoIds"
-      :key="id"
+      v-for="todo in todos"
+      :key="todo.id"
       class="column is-6 is-4-desktop is-3-widescreen">
-      <TodoCard :id="id" />
+      <TodoCard
+        :id="todo.id"
+        :todop="todo" />
     </div>
   </div>
 </template>
 
 <script>
-import { mapGetters, mapActions } from 'vuex'
+import { mapState, mapActions } from 'vuex'
 import TodoCard from '@/components/TodoCard.vue'
 export default {
   components: {
     TodoCard
   },
-  computed: mapGetters(['todoIds']),
+  computed: mapState(['todos']),
   beforeMount () {
     this.loadTodos()
   },

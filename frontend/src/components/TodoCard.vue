@@ -91,7 +91,7 @@
                   class="pr-0" />
               </div>
               <div
-                class="has-text-weight-semibold is-size-7 is-family-monospace has-height-transitioned">
+                class="has-text-weight-semibold is-size-7 is-family-monospace">
                 {{ due.date }}
               </div>
             </div>
@@ -102,7 +102,7 @@
           <component
             :is="editModeIsActive ? 'b-input' : 'div'"
             v-model="todo.description"
-            class="description has-height-transitioned mb-5"
+            class="description mb-5"
             placeholder="Description">
             {{ todo.description }}
           </component>
@@ -162,8 +162,8 @@
 </template>
 
 <script>
-import { mapState, mapActions, mapGetters } from 'vuex'
-import { cloneDeep, isEqual, debounce } from 'lodash'
+import { mapState, mapActions } from 'vuex'
+import { cloneDeep, isEqual } from 'lodash'
 import TodoStep from './TodoStep.vue'
 
 export default {
@@ -174,11 +174,15 @@ export default {
     id: {
       type: Number,
       required: true
+    },
+    todop: {
+      type: Object,
+      required: true
     }
   },
   data () {
     return {
-      todo: [],
+      todo: {},
       due: {
         date: '',
         color: 'yellow',
@@ -235,13 +239,14 @@ export default {
         this.shake()
       }
     },
-    // data: {
-    //   immediate: true,
-    //   deep: true,
-    //   handler(newValue, oldValue) {
-
-    //   }
-    // }
+    todop: {
+      immediate: true,
+      deep: true,
+      handler (newValue, oldValue) {
+        console.log('watch')
+        if (!isEqual(newValue, oldValue)) this.todo = cloneDeep(newValue)
+      }
+    },
     'todo.title' (value) {
       if (this.formIsValid && !value.trim()) {
         this.updateFormIsValid(false)
@@ -251,7 +256,6 @@ export default {
     }
   },
   created () {
-    this.todo = cloneDeep(this.getTodoById()(this.id))
     this.parseDueDate()
     this.intervalId = setInterval(() => {
       this.parseDueDate()
@@ -277,15 +281,18 @@ export default {
       'updateFormIsValid',
       'updateCardIsShaking'
     ]),
-    ...mapGetters(['getTodoById']),
     toggleDone () {
       this.todo.done = !this.todo.done
       this.updateTodoAndFetch()
     },
-    updateTodoAndFetch: debounce(function () {
-      console.log('xxx', this.todo)
+    updateTodoAndFetch () {
+      console.log('xxx', this.todo.steps)
       this.updateTodo(this.todo)
-    }, 1000),
+        .finally(() => {
+          console.log('finally')
+          this.todo = cloneDeep(this.todop)
+        })
+    },
     // updateTodoAndFetch () { this.updateTodo(this.todo) },
     // console.log(1, 'call action', this.todo)
     // this.todo.steps[index].done = done
@@ -343,7 +350,6 @@ export default {
         this.addStep()
       } else {
         this.cardParentRef.appendChild(this.cardRef)
-        this.cardRef.classList.remove('pop-up')
         this.todo.steps.pop()
         if (!isEqual(this.todo, this.todoInfoBefore)) {
           this.updateStepsOrder()
@@ -355,7 +361,6 @@ export default {
       const onComplete = () => {
         if (status) {
           this.$refs[`title${this.id}`].focus()
-          this.cardRef.classList.add('pop-up')
         } else {
           this.popUpContainerRef.style.visibility = 'hidden'
           this.cardParentRef.style.height = 'initial'
@@ -429,16 +434,6 @@ export default {
     top: 100%
     overflow: hidden
     border-radius: 0 0 1em 1em
-
-.pop-up
-  // .card
-  //   overflow-y: auto
-  //   overflow-x: hidden
-
-.has-height-transitioned
-  transition: all 0.3s ease-out
-  height: auto
-  flex: 1
 
 ::v-deep .header
   &,
