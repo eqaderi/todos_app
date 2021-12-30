@@ -25,7 +25,7 @@
                 <b-button
                   class="ml-5"
                   size="is-medium"
-                  type="is-dark"
+                  type="is-primary"
                   icon-left="plus"
                   rounded
                   @click="AddNewTodo">
@@ -63,7 +63,7 @@ export default {
       newTodo: {
         id: 'new',
         createdAt: null,
-        color: '#ffffff',
+        color: '#673ab7',
         title: '',
         description: '',
         dueDate: null,

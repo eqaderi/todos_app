@@ -22,7 +22,6 @@ export default {
       immediate: true,
       deep: true,
       handler (value) {
-        console.log(value)
         if (value.type) this.danger(value.text, value.type)
       }
     }
@@ -33,7 +32,7 @@ export default {
         message: text,
         type: type,
         duration: 5000,
-        position: 'is-bottom',
+        // position: 'is-bottom',
         pauseOnHover: true
       })
     }

@@ -178,21 +178,19 @@ export function updateTodo (req) {
       }
 
       todos[index] = JSON.parse(JSON.stringify(req))
-      // console.log(todos)
-      // resolve(todos[index])
-      reject(new Error('You are not connected!'))
+      resolve(todos[index])
+      // reject(new Error('You are not connected!'))
     }, 1000)
   })
 }
 
 export function addTodo (req) {
   return new Promise((resolve, reject) => {
-    console.log('api', req)
     setTimeout(() => {
       req.id = Math.random()
       todos.unshift(req)
-      // resolve(req)
-      reject(new Error('You are not connected!'))
+      resolve(req)
+      // reject(new Error('You are not connected!'))
     }, 1000)
   })
 }
@@ -204,6 +202,7 @@ export function deleteTodo (reqId) {
 
       todos.splice(index, 1)
       resolve('deleted')
+      // reject(new Error('You are not connected!'))
     }, 1000)
   })
 }

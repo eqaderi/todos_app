@@ -45,7 +45,7 @@ export default {
     right: 0
     bottom: 0
     left: 0
-    box-shadow: inset 0 5px 4px -2px rgb(255 255 255 / 70%)
+    box-shadow: inset 0 5px 4px -2px rgb(255 255 255 / 40%)
     border-radius: 999px
     mix-blend-mode: overlay
     border: 3px solid #0000

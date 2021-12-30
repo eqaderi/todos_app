@@ -29,11 +29,13 @@
     <template #end>
       <b-navbar-item tag="div">
         <div class="buttons">
-          <a class="button is-primary">
-            <strong>Sign up</strong>
-          </a>
           <router-link
-            class="navbar-item button is-light"
+            class="button is-primary is-rounded"
+            to="/signup">
+            Sign up
+          </router-link>
+          <router-link
+            class="navbar-item button is-light is-rounded"
             to="/login">
             Log in
           </router-link>

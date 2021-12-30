@@ -143,7 +143,6 @@ export default new Vuex.Store({
     },
 
     async addTodo ({ commit, dispatch }, todoObj) {
-      console.log('action', todoObj)
       commit('UPDATE_LOADER', { status: true, todoId: 'new' })
 
       const pyNormalized = normalizeForPython(todoObj)

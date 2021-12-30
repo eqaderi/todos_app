@@ -25,7 +25,7 @@
             v-show="!editModeIsActive"
             aria-role="list"
             :triggers="['hover']"
-            class="actions">
+            class="actions is-clickable">
             <template #trigger>
               <div class="actions__icon">
                 <div
@@ -38,8 +38,30 @@
               @click="popUp">
               Edit
             </b-dropdown-item>
-            <b-dropdown-item aria-role="listitem">Delete</b-dropdown-item>
+            <b-dropdown-item
+              aria-role="listitem"
+              @click="deleteTodo(id)">
+              Delete
+            </b-dropdown-item>
           </b-dropdown>
+
+          <div
+            v-if="editModeIsActive || addingNewTodo"
+            class="actions m-5 is-flex is-align-items-center">
+            <span class="mr-5 has-text-weight-bold">Color: </span>
+            <div class="is-relative">
+              <ColorElement
+                :color="todo.color"
+                :border-color="borderColor"
+                @click.native="swatchVisible = true" />
+              <ColorSwatch
+                v-if="swatchVisible"
+                :color.sync="todo.color"
+                tabindex="0"
+                @focusout.native="swatchVisible = false"
+                @close-swatch="swatchVisible = false" />
+            </div>
+          </div>
           <!-- Actions -->
 
           <div class="mb-5">
@@ -75,7 +97,7 @@
               </div>
             </div>
             <!-- Header -->
-            <div class="is-flex is-justify-content-space-between mt-6">
+            <div class="mt-3">
               <!-- Due date -->
               <b-datetimepicker
                 v-if="editModeIsActive || addingNewTodo"
@@ -120,18 +142,6 @@
                 <div
                   class="has-text-weight-semibold is-size-7 is-family-monospace">
                   {{ due.date }}
-                </div>
-              </div>
-              <div
-                v-if="editModeIsActive || addingNewTodo"
-                class="is-flex is-align-items-center">
-                <span class="mr-5 has-text-weight-bold">Color: </span>
-                <div class="is-relative">
-                  <ColorElement
-                    :color="todo.color"
-                    :border-color="borderColor" />
-                  <ColorSwatch
-                    :color.sync="todo.color" />
                 </div>
               </div>
               <!-- Due date -->
@@ -184,7 +194,9 @@
               v-if="todoIsDone"
               icon="check-all"
               class="pr-2" />
-            {{ todoIsDone ? "Completed" : "Mark as complete" }}
+            <span v-if="!editModeIsActive">
+              {{ todoIsDone ? "Completed" : "Mark as complete" }}
+            </span>
           </div>
 
           <div
@@ -192,7 +204,7 @@
 
             class="card-footer-item is-clickable done-btn"
             :style="{ borderColor }"
-            @click="toggleDone">
+            @click="closeForm">
             Cancel
           </div>
           <div
@@ -248,7 +260,8 @@ export default {
       intervalId: null,
       todoInfoBeforePop: {},
       searchBoxRef: null,
-      cardWrapperRef: null
+      cardWrapperRef: null,
+      swatchVisible: false
     }
   },
   computed: {
@@ -323,20 +336,15 @@ export default {
       deep: true,
       handler (newValue, oldValue) {
         if (!isEqual(newValue, oldValue)) {
-          console.log('res', newValue)
           this.todo = cloneDeep(newValue)
-          console.log('resCp', this.todo)
         }
       }
     },
     'todo.title' (value) {
       if (!this.editModeIsActive || this.addingNewTodo) return
-      console.log('title watcher')
       if (this.formValidationStatus.status && !value.trim()) {
-        console.log('title invalid')
         this.updateFormValidationStatus({ status: false, todoId: this.id })
       } else if (!this.formValidationStatus.status && value.trim()) {
-        console.log('title valid')
         this.updateFormValidationStatus({ status: true, todoId: this.id })
       }
     }
@@ -371,9 +379,11 @@ export default {
       'updateCardIsShaking',
       'updateDisableInteraction',
       'updateNewTodo',
-      'addTodo'
+      'addTodo',
+      'deleteTodo'
     ]),
     toggleDone () {
+      if (this.editModeIsActive) return
       this.todo.done = !this.todo.done
       this.updateTodoAndFetch()
     },
@@ -511,16 +521,6 @@ export default {
       )
     },
     async submitAddTodo () {
-      // if (!isEqual(this.todo, this.todoInfoBeforePop)) {
-      // if (this.formValidationStatus.status && !this.todo.title.trim()) {
-      //   console.log('title invalid')
-      //   this.updateFormValidationStatus({ status: false, todoId: this.id })
-      //   return
-      // } else if (!this.formValidationStatus.status && this.todo.title.trim()) {
-      //   console.log('title valid')
-      //   this.updateFormValidationStatus({ status: true, todoId: this.id })
-      // }
-
       this.validateTitle()
       if (this.titleIsNotValid) {
         this.shake()
@@ -528,22 +528,18 @@ export default {
       }
       try {
         this.todo.steps.pop()
-        console.log('init', this.todo)
         await this.addTodo(this.todo)
-        this.updateBackdrop(false)
-        this.updateCardPoppedUp({
-          status: false,
-          todoId: this.cardPoppedUp.todoId
-        })
-        this.restForm()
+        this.closeForm()
       } catch (error) {
-
       }
-
-      //   // this.updateStepsOrder()
-      //   // this.updateTodoAndFetch()
-      //   // this.parseDueDate()
-      // }
+    },
+    closeForm () {
+      this.updateBackdrop(false)
+      this.updateCardPoppedUp({
+        status: false,
+        todoId: this.cardPoppedUp.todoId
+      })
+      this.restForm()
     },
     restForm () {
       this.titleIsNotValid = false
@@ -700,7 +696,7 @@ export default {
   right: 0
   font-size: initial
   padding: 0
-  cursor: pointer
+  // cursor: pointer
   &__icon
     padding: 1em
     div

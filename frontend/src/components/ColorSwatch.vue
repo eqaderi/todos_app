@@ -1,13 +1,14 @@
 <template>
   <div class="parent p-3">
-    <!-- <div class="is-flex is-align-items-center p-4">
-      <span class="mr-5 has-text-weight-bold">Color:</span>
-      <ColorElement
-        :color="colorModel"
-        border-color="#ffffff"
-        class="p-4" />
-    </div> -->
-    <div class="is-flex is-flex-wrap-wrap">
+    <div class="is-flex is-flex-direction-row-reverse is-flex-wrap-wrap">
+      <b-tooltip
+        label="Close swatch"
+        type="is-dark">
+        <button
+          class="delete is-medium"
+          style="margin: 1.28rem"
+          @click="$emit('close-swatch')" />
+      </b-tooltip>
       <ColorElement
         v-for="cl in colors"
         :key="cl"
@@ -38,19 +39,25 @@ export default {
   data () {
     return {
       colors: [
-        '#a18cd1',
-        '#b12a5b',
-        '#84fab0',
-        '#8fd3f4',
-        '#00f2fe',
-        '#667eea',
-        '#764ba2',
-        '#ee609c',
-        '#6a11cb',
-        '#2575fc',
-        '#646464',
-        '#f78a9f',
-        '#0fa564'
+        '#f44336',
+        '#e91e63',
+        '#9c27b0',
+        '#673ab7',
+        '#3f51b5',
+        '#2196f3',
+        '#03a9f4',
+        '#00bcd4',
+        '#009688',
+        '#4caf50',
+        '#8bc34a',
+        '#cddc39',
+        '#ffeb3b',
+        '#ffc107',
+        '#ff9800',
+        '#ff5722',
+        '#795548',
+        '#9e9e9e',
+        '#607d8b'
       ]
     }
   },
@@ -74,8 +81,13 @@ export default {
 
 <style lang="sass" scoped>
 .parent
+  position: absolute
+  top: 50%
+  left: 50%
+  transform: translateY(-20%) translateX(-80%)
   background-color: #fff
   width: 345px
   border-radius: 1em
   box-shadow: 0px 10px 20px -10px rgb(0 0 0 / 50%)
+  z-index: 2
 </style>

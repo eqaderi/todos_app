@@ -34,5 +34,5 @@ export default {
   bottom: 0
   z-index: 300
   background-color: #000
-  opacity: 0.5
+  opacity: 0.2
 </style>
