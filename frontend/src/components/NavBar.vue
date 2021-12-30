@@ -1,5 +1,8 @@
 <template>
-  <b-navbar fixed-top>
+  <!-- <div class="container"> -->
+  <b-navbar
+    fixed-top
+    wrapper-class="container">
     <template #brand>
       <b-navbar-item
         tag="router-link"
@@ -21,10 +24,6 @@
         to="/about">
         About
       </router-link>
-      <b-navbar-dropdown label="Info">
-        <b-navbar-item href="#"> About </b-navbar-item>
-        <b-navbar-item href="#"> Contact </b-navbar-item>
-      </b-navbar-dropdown>
     </template>
 
     <template #end>
@@ -42,4 +41,5 @@
       </b-navbar-item>
     </template>
   </b-navbar>
+  <!-- </div> -->
 </template>

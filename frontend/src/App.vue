@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <Navbar />
-    <router-view class="mt-6" />
+    <router-view />
     <BackDrop v-if="backdrop" />
   </div>
 </template>
