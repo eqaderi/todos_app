@@ -50,7 +50,7 @@ export default {
   right: 25vw
   // transform: translateY(-50%)
   z-index: 1000
-  visibility: hidden
+  // visibility: hidden
 
 .fade-enter-active, .fade-leave-active
   transition: opacity .24s ease-out, transform .24s ease-out

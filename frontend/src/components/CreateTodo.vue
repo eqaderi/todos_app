@@ -14,8 +14,10 @@
               <div
                 class="is-flex is-justify-content-space-between is-align-items-center">
                 <b-input
+                  id="search-box"
                   v-model="searchPhraseC"
-                  class="is-flex-grow-1"
+                  data-flip-id="new"
+                  class="is-flex-grow-1 search-box"
                   placeholder="Search for todos in titles and desc..."
                   size="is-medium"
                   rounded
@@ -60,23 +62,27 @@ export default {
       newTodo: {
         id: 'new',
         createdAt: null,
-        color: '#ff0000',
+        color: '#ffffff',
         title: '',
         description: '',
-        steps: [],
         dueDate: null,
-        done: false
+        done: false,
+        steps: [
+          {
+            order: null,
+            text: '',
+            done: false
+          }
+        ]
       }
     }
   },
   computed: {
     ...mapState(['todos']),
     searchPhraseC: {
-      // getter
       get: function () {
         return this.searchPhrase
       },
-      // setter
       set: function (newValue) {
         this.$emit('update:search-phrase', newValue)
       }
@@ -86,7 +92,6 @@ export default {
     ...mapActions(['updateNewTodo', 'updateCardPoppedUp']),
     AddNewTodo () {
       this.$emit('clear-search')
-      // this.updateNewTodo(true)
       this.updateCardPoppedUp({ status: true, todoId: this.newTodo.id })
     }
   }
@@ -100,4 +105,13 @@ export default {
   bottom: 0
   left: 0
   right: 0
+
+#search-box
+  &.popup
+    visibility: hidden !important
+
+  &,
+  &.flipping
+  visibility: visible !important
+
 </style>

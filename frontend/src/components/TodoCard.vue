@@ -9,7 +9,10 @@
       'card-parent',
     ]">
     <div
+      :id="`card${id}wrapper`"
+
       :ref="`card${id}wrapper`"
+      data-flip-id="new"
       class="card-wrapper">
       <div
         :ref="`card${id}`"
@@ -18,7 +21,7 @@
         <div class="card-content">
           <!-- Actions -->
           <b-dropdown
-            v-if="id !== 'new'"
+            v-if="!addingNewTodo"
             v-show="!editModeIsActive"
             aria-role="list"
             :triggers="['hover']"
@@ -51,12 +54,12 @@
                   size="is-medium"
                   class="mr-4" />
                 <component
-                  :is="editModeIsActive ? 'b-input' : 'h3'"
+                  :is="editModeIsActive || addingNewTodo ? 'b-input' : 'h3'"
                   :ref="`title${id}`"
                   v-model="todo.title"
                   placeholder="Title"
                   size="is-large"
-                  :autofocus="id !== 'new'"
+                  :autofocus="!addingNewTodo"
                   :class="[
                     todoIsDone ? 'is-step-done' : '',
                     'header has-text-weight-bold is-size-4',
@@ -75,12 +78,12 @@
 
             <!-- Due date -->
             <b-datetimepicker
-              v-if="editModeIsActive"
+              v-if="editModeIsActive || addingNewTodo"
               v-model="todo.dueDate"
               placeholder="Click to select the due date ..."
               icon="timer-outline"
               :datetime-formatter="
-                (t) => this.$dayjs(t).format('dddd, MMMM D, YYYY h:mm A')
+                (t) => this.$dayjs(t).format('dddd, MMMM D, cardWrapperRefcardWrapperRef h:mm A')
               "
               class="pt-4">
               <template #left>
@@ -124,8 +127,8 @@
 
           <!-- Description -->
           <component
-            :is="editModeIsActive ? 'b-input' : 'div'"
-            v-if="editModeIsActive || todo.description"
+            :is="editModeIsActive || addingNewTodo ? 'b-input' : 'div'"
+            v-if="editModeIsActive || addingNewTodo || todo.description"
             v-model="todo.description"
             class="description mb-5"
             placeholder="Description">
@@ -134,7 +137,7 @@
           <!-- Description -->
 
           <!-- TodoStep -->
-          <div :class="[editModeIsActive ? 'border-top' : '']">
+          <div :class="[editModeIsActive || addingNewTodo ? 'border-top' : '']">
             <TodoStep
               v-for="(step, index) in todo.steps"
               :key="step.order"
@@ -142,7 +145,7 @@
               :steps-length="todo.steps.length"
               :step="step"
               :steps="todo.steps"
-              :edit-mode-is-active="editModeIsActive"
+              :edit-mode-is-active="editModeIsActive || addingNewTodo"
               @step:update="updateTodoAndFetch"
               @step:delete="deleteStep"
               @step:add="addStep" />
@@ -151,7 +154,7 @@
         </div>
 
         <footer
-          v-if="id !== 'new'"
+          v-if="!addingNewTodo"
           class="card-footer has-text-weight-semibold"
           :style="{ borderColor, backgroundColor: lighterColor }">
           <div
@@ -211,7 +214,9 @@ export default {
         iconsLength: 0
       },
       intervalId: null,
-      todoInfoBeforePop: {}
+      todoInfoBeforePop: {},
+      searchBoxRef: null,
+      cardWrapperRef: null
     }
   },
   computed: {
@@ -240,7 +245,7 @@ export default {
         .alpha(0.5)
     },
     boxShadow () {
-      if (this.id === 'new') return 'none'
+      if (this.addingNewTodo) return 'none'
       const outside = `0 .5em 1.5em -.1em ${this.lighterColor}`
       const inside = `inset 0 0 .25em 1em ${this.borderColor.alpha(0.05)}`
       return this.editModeIsActive ? `${inside}` : `${inside}, ${outside}`
@@ -256,13 +261,20 @@ export default {
     editModeIsActive () {
       const { status, todoId } = this.cardPoppedUp
       return status && this.id === todoId
+    },
+    addingNewTodo () {
+      return this.id === 'new'
     }
   },
   watch: {
     cardPoppedUp: {
       deep: true,
       handler (value) {
-        this.togglePopUpCard(value)
+        if (this.addingNewTodo) {
+          this.toggleNewPopUpCard(value)
+        } else {
+          this.togglePopUpCard(value)
+        }
       }
     },
     cardIsShaking: {
@@ -299,16 +311,15 @@ export default {
   },
   mounted () {
     this.popUpContainerRef = document.getElementById('pop-up-container')
+    this.searchBoxRef = document.getElementById('search-box')
     this.cardParentRef = document.getElementById(`card${this.id}parent`)
-    this.cardWrapperRef = this.$refs[`card${this.id}wrapper`]
-    this.cardRef = this.$refs[`card${this.id}`]
-    this.cardProgressRef = this.$refs[`card${this.id}progress`]
-    // if (this.id === 'new') this.cardParentRef.style.visibility = 'hidden'
-    if (this.id === 'new') this.cardWrapperRef.style.height = '0'
+    this.cardWrapperRef = document.getElementById(`card${this.id}wrapper`)
 
-    // if (this.id === 'new') this.cardWrapperRef.style.opacity = '0'
-    // this.cardParentRef = this.$refs[`card${this.id}parent`]
-    // this.popUpContainerRef = this.$refs['pop-up-container']
+    if (this.addingNewTodo) {
+      // this.popUpContainerRef.style.visibility = 'visible'
+      this.popUpContainerRef.appendChild(this.cardWrapperRef)
+      this.cardWrapperRef.style.display = 'none'
+    }
   },
   methods: {
     ...mapActions([
@@ -356,7 +367,7 @@ export default {
       const differenceIsADayOrMore = Math.abs(diff) >= 0.5
       const parsedDate = differenceIsADayOrMore
         ? this.$dayjs(this.$dayjs(this.todo.dueDate)).calendar(null, {
-          sameElse: 'MMMM D, YYYY h:mm A'
+          sameElse: 'MMMM D, cardWrapperRefcardWrapperRef h:mm A'
         })
         : this.$dayjs(this.$dayjs(this.todo.dueDate)).fromNow()
 
@@ -365,27 +376,52 @@ export default {
           ? null
           : `Due date ${toBeVerb} ${parsedDate}`
     },
+
+    toggleNewPopUpCard ({ status, todoId }) {
+      if (todoId !== this.id) return
+
+      const cardFlipState = this.$Flip.getState(`#search-box, #card${this.id}wrapper`)
+      this.updateBackdrop(status)
+      if (status) {
+        this.todoInfoBefore = cloneDeep(this.todo)
+        this.searchBoxRef.classList.add('popup')
+        this.cardWrapperRef.style.display = 'block'
+      } else {
+        this.searchBoxRef.classList.remove('popup')
+        this.cardWrapperRef.style.display = 'none'
+        if (!isEqual(this.todo, this.todoInfoBefore)) {
+          // this.updateStepsOrder()
+          // this.updateTodoAndFetch()
+          // this.parseDueDate()
+        }
+      }
+
+      this.$Flip.from(cardFlipState, {
+        duration: 0.27,
+        props: 'backgroundColor,border',
+        ease: 'power2.out',
+        absolute: true,
+        fade: true,
+        zIndex: 2000,
+        toggleClass: 'flipping',
+        scale: true
+      })
+    },
     togglePopUpCard ({ status, todoId }) {
       if (todoId !== this.id) return
 
       const cardFlipState = this.$Flip.getState(this.cardWrapperRef)
-      this.cardWrapperRef.style.zIndex = 2000
       this.updateBackdrop(status)
 
       if (status) {
         this.todoInfoBefore = cloneDeep(this.todo)
-        this.popUpContainerRef.style.visibility = 'visible'
         this.cardParentRef.style.height = `${this.cardParentRef.offsetHeight}px`
         this.popUpContainerRef.appendChild(this.cardWrapperRef)
         this.addStep()
-        if (this.id === 'new') this.cardWrapperRef.style.height = 'initial'
-
-        // if (this.id === 'new') this.cardWrapperRef.style.opacity = '1'
-        // if (this.id === 'new') this.cardParentRef.style.visibility = 'visible'
-        // if (this.id === 'new') this.cardParentRef.style.height = 'initial'
       } else {
         this.cardParentRef.appendChild(this.cardWrapperRef)
         this.todo.steps.pop()
+
         if (!isEqual(this.todo, this.todoInfoBefore)) {
           this.updateStepsOrder()
           this.updateTodoAndFetch()
@@ -395,23 +431,22 @@ export default {
 
       const onComplete = () => {
         if (status) {
-          if (this.id !== 'new') this.$refs[`title${this.id}`].focus()
+          this.$refs[`title${this.id}`].focus()
         } else {
-          this.popUpContainerRef.style.visibility = 'hidden'
-          this.cardParentRef.style.height = this.id === 'new' ? '0' : 'initial'
-          this.cardWrapperRef.style.zIndex = 'initial'
-          if (this.id === 'new') this.cardWrapperRef.style.height = '0'
-          // if (this.id === 'new') this.cardWrapperRef.style.opacity = '0'
-          // if (this.id === 'new') this.cardParentRef.style.visibility = 'hidden'
+          this.cardParentRef.style.height = 'initial'
         }
       }
 
       this.$Flip.from(cardFlipState, {
         // paused: true,
-        duration: 0.3,
+        targets: this.cardWrapperRef,
+        duration: 0.27,
         ease: 'power2.out',
         absolute: true,
-        onComplete
+        zIndex: 2000,
+        toggleClass: 'flipping',
+        onComplete,
+        scale: true
       })
     },
     shake () {
@@ -423,7 +458,6 @@ export default {
           x: 5,
           clearProps: 'x',
           repeat: 30,
-          // onStart: () => { this.cardWrapperRef.style.opacity = 0 },
           onComplete: () =>
             this.updateCardIsShaking({ status: false, todoId: null })
         }
@@ -487,8 +521,18 @@ export default {
 .card-wrapper
   position: relative
 
+.flipping
+  // overflow: hidden
+// .card
+//   // transition: opacity .1s ease
+//   opacity: 1
+//   .flipping &
+//     // transition: opacity 0s ease
+//     opacity: 0
+
 .card
   position: relative
+  // height: 100%
   &-footer
     position: sticky
     top: 100%
