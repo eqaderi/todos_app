@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import { fetchTodos, updateTodo } from '@/api'
+import { fetchTodos, addTodo, deleteTodo, updateTodo } from '@/api'
 import pDebounce from 'p-debounce'
 import { debounce, cloneDeep, mapKeys, camelCase, snakeCase } from 'lodash'
 
@@ -62,10 +62,11 @@ export default new Vuex.Store({
       status: true,
       todoId: null
     },
-    error: {
+    message: {
       code: null,
-      message: '',
-      todoIs: null
+      type: null,
+      text: null,
+      todoId: null
     },
     disableInteraction: {
       status: false,
@@ -82,6 +83,15 @@ export default new Vuex.Store({
     UPDATE_LOADER (state, { status, todoId }) {
       state.loader.status = status
       state.loader.todoId = todoId
+    },
+    ADD_TODO (state, payload) {
+      // Vue.set(state.todos, 0, payload)
+      state.todos.unshift(payload)
+    },
+    DELETE_TODO (state, todoId) {
+      const index = state.todos.findIndex(({ id }) => +id === +todoId)
+      state.todos.splice(index, 1)
+      // Vue.set(state.todos, index, payload)
     },
     UPDATE_TODO (state, payload) {
       const todoId = payload.id
@@ -103,10 +113,11 @@ export default new Vuex.Store({
       state.cardIsShaking.status = status
       state.cardIsShaking.todoId = todoId
     },
-    SET_ERROR (state, { code, message, todoId }) {
-      state.error.code = code
-      state.error.message = message
-      state.error.todoId = todoId
+    SET_MESSAGE (state, { code, type, text, todoId }) {
+      state.message.code = code
+      state.message.type = type
+      state.message.text = text
+      state.message.todoId = todoId
     },
     SET_DISABLE_INTERACTION (state, { status, todoId }) {
       state.disableInteraction.status = status
@@ -125,14 +136,75 @@ export default new Vuex.Store({
       debounced()
       const rawTodos = await fetchTodos()
       const todos = rawTodos.map(normalizeForJavascript)
-      debounced.cancel()
 
       debounced.cancel()
       commit('SET_TODOS', { todos })
       commit('UPDATE_LOADER', { status: false, todoId: 'all' })
     },
 
-    updateTodo: pDebounce(async ({ commit, state, dispatch }, todoObj) => {
+    async addTodo ({ commit, dispatch }, todoObj) {
+      console.log('action', todoObj)
+      commit('UPDATE_LOADER', { status: true, todoId: 'new' })
+
+      const pyNormalized = normalizeForPython(todoObj)
+      let rawTodo = {}
+      try {
+        rawTodo = await addTodo(pyNormalized)
+        dispatch('updateMessage', {
+          code: 200,
+          type: 'is-success',
+          text: 'Todo added.',
+          todoId: null // TODO
+        })
+      } catch (error) {
+        dispatch('updateMessage', {
+          code: error.code,
+          type: 'is-danger',
+          text: error.message,
+          todoId: null // TODO
+        })
+        commit('SET_SHAKE', { status: true, todoId: 'new' })
+
+        throw error
+      } finally {
+        commit('SET_DISABLE_INTERACTION', { status: false, todoId: null })
+        commit('UPDATE_LOADER', { status: false, todoId: 'new' })
+      }
+      const todo = normalizeForJavascript(rawTodo)
+      commit('ADD_TODO', todo)
+    },
+
+    async deleteTodo ({ commit, dispatch }, todoId) {
+      commit('UPDATE_LOADER', { status: true, todoId: 'delete' })
+
+      // let res = {}
+      try {
+        await deleteTodo(todoId)
+        dispatch('updateMessage', {
+          code: 200,
+          type: 'is-success',
+          text: 'Todo deleted.',
+          todoId: todoId
+        })
+      } catch (error) {
+        dispatch('updateMessage', {
+          code: error.code,
+          type: 'is-danger',
+          text: error.message,
+          todoId: todoId
+        })
+        commit('SET_SHAKE', { status: true, todoId: todoId })
+
+        throw error
+      } finally {
+        commit('SET_DISABLE_INTERACTION', { status: false, todoId: todoId })
+        commit('UPDATE_LOADER', { status: false, todoId: todoId })
+      }
+
+      commit('DELETE_TODO', todoId)
+    },
+
+    updateTodo: pDebounce(async ({ commit, dispatch }, todoObj) => {
       // commit('SET_DISABLE_INTERACTION', { status: true, todoId: todoObj.id })
       const commitLoaderUpdate = () =>
         commit('UPDATE_LOADER', { status: true, todoId: todoObj.id })
@@ -143,18 +215,18 @@ export default new Vuex.Store({
       let rawTodo = {}
       try {
         rawTodo = await updateTodo(pyNormalized)
-        if (state.error.code) {
-          commit('SET_ERROR', {
-            code: null,
-            message: '',
-            todoIs: null
-          })
-        }
+
+        dispatch('updateMessage', {
+          code: 200,
+          type: 'is-success',
+          text: 'Todo updated.',
+          todoId: todoObj.id
+        })
       } catch (error) {
-        commit('UPDATE_LOADER', { status: false, todoId: todoObj.id })
-        dispatch('toggleError', {
+        dispatch('updateMessage', {
           code: error.code,
-          message: error.message,
+          type: 'is-danger',
+          text: error.message,
           todoId: todoObj.id
         })
         commit('SET_SHAKE', { status: true, todoId: todoObj.id })
@@ -162,13 +234,13 @@ export default new Vuex.Store({
         throw error
       } finally {
         commit('SET_DISABLE_INTERACTION', { status: false, todoId: null })
+        commit('UPDATE_LOADER', { status: false, todoId: todoObj.id })
       }
 
       debouncedCommitLoaderUpdate.cancel()
 
       const todo = normalizeForJavascript(rawTodo)
       commit('UPDATE_TODO', todo)
-      commit('UPDATE_LOADER', { status: false, todoId: todoObj.id })
     }, 1000),
 
     updateBackdrop ({ commit }, status) {
@@ -191,15 +263,16 @@ export default new Vuex.Store({
       commit('SET_DISABLE_INTERACTION', payload)
     },
 
-    toggleError ({ commit }, payload) {
+    updateMessage ({ commit }, payload) {
       clearTimeout(sti)
-      commit('SET_ERROR', payload)
+      commit('SET_MESSAGE', payload)
 
       sti = setTimeout(() => {
-        commit('SET_ERROR', {
+        commit('SET_MESSAGE', {
           code: null,
-          message: '',
-          todoIs: null
+          type: null,
+          text: null,
+          todoId: null
         })
       }, 1)
     },

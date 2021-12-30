@@ -9,31 +9,31 @@
 <script>
 import Navbar from '@/components/NavBar.vue'
 import BackDrop from '@/components/BackDrop.vue'
-import { mapState, mapActions } from 'vuex'
+import { mapState } from 'vuex'
 
 export default {
   components: {
     Navbar,
     BackDrop
   },
-  computed: mapState(['backdrop', 'error']),
+  computed: mapState(['backdrop', 'message']),
   watch: {
-    error: {
+    message: {
       immediate: true,
       deep: true,
       handler (value) {
-        if (value.message) this.danger(value.message)
+        console.log(value)
+        if (value.type) this.danger(value.text, value.type)
       }
     }
   },
   methods: {
-    ...mapActions(['updateError']),
-    danger (message) {
+    danger (text, type) {
       this.$buefy.toast.open({
+        message: text,
+        type: type,
         duration: 5000,
-        message,
         position: 'is-bottom',
-        type: 'is-danger',
         pauseOnHover: true
       })
     }

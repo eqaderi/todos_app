@@ -25,6 +25,7 @@
                 <b-button
                   class="ml-5"
                   size="is-medium"
+                  type="is-dark"
                   icon-left="plus"
                   rounded
                   @click="AddNewTodo">
@@ -67,13 +68,7 @@ export default {
         description: '',
         dueDate: null,
         done: false,
-        steps: [
-          {
-            order: null,
-            text: '',
-            done: false
-          }
-        ]
+        steps: []
       }
     }
   },
@@ -112,6 +107,6 @@ export default {
 
   &,
   &.flipping
-  visibility: visible !important
+    visibility: visible !important
 
 </style>

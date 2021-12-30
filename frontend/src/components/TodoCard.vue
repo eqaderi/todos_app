@@ -44,7 +44,7 @@
 
           <div class="mb-5">
             <!-- Header -->
-            <div class="my-3">
+            <div class="mt-3">
               <div
                 class="is-flex is-align-content-center"
                 :style="{ color: darkerColor }">
@@ -69,60 +69,73 @@
                 </component>
               </div>
               <div
-                v-if="titleIsNotValid"
+                v-show="titleIsNotValid"
                 class="is-family-code is-size-7 has-text-weight-bold has-text-danger pt-3">
                 Can't do it! Title is required ¯\_(ツ)_/¯
               </div>
             </div>
             <!-- Header -->
+            <div class="is-flex is-justify-content-space-between mt-6">
+              <!-- Due date -->
+              <b-datetimepicker
+                v-if="editModeIsActive || addingNewTodo"
+                v-model="todo.dueDate"
+                placeholder="Click to select the due date ..."
+                icon="timer-outline"
+                class="is-flex-grow-1"
+                :datetime-formatter="
+                  (t) => this.$dayjs(t).format('dddd, MMMM D, YYYY h:mm A')
+                ">
+                <template #left>
+                  <b-button
+                    label="Now"
+                    type="is-primary"
+                    icon-left="clock"
+                    @click="todo.dueDate = new Date()" />
+                </template>
 
-            <!-- Due date -->
-            <b-datetimepicker
-              v-if="editModeIsActive || addingNewTodo"
-              v-model="todo.dueDate"
-              placeholder="Click to select the due date ..."
-              icon="timer-outline"
-              :datetime-formatter="
-                (t) => this.$dayjs(t).format('dddd, MMMM D, cardWrapperRefcardWrapperRef h:mm A')
-              "
-              class="pt-4">
-              <template #left>
-                <b-button
-                  label="Now"
-                  type="is-primary"
-                  icon-left="clock"
-                  @click="todo.dueDate = new Date()" />
-              </template>
-
-              <template #right>
-                <b-button
-                  label="Clear"
-                  type="is-danger"
-                  icon-left="close"
-                  outlined
-                  @click="todo.dueDate = null" />
-              </template>
-            </b-datetimepicker>
-            <div
-              v-else-if="todo.dueDate"
-              class="due-date is-flex is-align-items-center pt-2">
+                <template #right>
+                  <b-button
+                    label="Clear"
+                    type="is-danger"
+                    icon-left="close"
+                    outlined
+                    @click="todo.dueDate = null" />
+                </template>
+              </b-datetimepicker>
               <div
-                v-if="!todoIsDone && due.iconsLength"
-                class="due-date__icon mr-2 is-flex is-align-items-center">
-                <b-icon
-                  v-for="n in due.iconsLength"
-                  :key="n"
-                  :style="{ color: due.color, width: '10px' }"
-                  size="is-small"
-                  icon="exclamation-thick"
-                  class="pr-0" />
+                v-else-if="todo.dueDate"
+                class="due-date is-flex is-align-items-center pt-2">
+                <div
+                  v-if="!todoIsDone && due.iconsLength"
+                  class="due-date__icon mr-2 is-flex is-align-items-center">
+                  <b-icon
+                    v-for="n in due.iconsLength"
+                    :key="n"
+                    :style="{ color: due.color, width: '10px' }"
+                    size="is-small"
+                    icon="exclamation-thick"
+                    class="pr-0" />
+                </div>
+                <div
+                  class="has-text-weight-semibold is-size-7 is-family-monospace">
+                  {{ due.date }}
+                </div>
               </div>
               <div
-                class="has-text-weight-semibold is-size-7 is-family-monospace">
-                {{ due.date }}
+                v-if="editModeIsActive || addingNewTodo"
+                class="is-flex is-align-items-center">
+                <span class="mr-5 has-text-weight-bold">Color: </span>
+                <div class="is-relative">
+                  <ColorElement
+                    :color="todo.color"
+                    :border-color="borderColor" />
+                  <ColorSwatch
+                    :color.sync="todo.color" />
+                </div>
               </div>
+              <!-- Due date -->
             </div>
-            <!-- Due date -->
           </div>
 
           <!-- Description -->
@@ -154,10 +167,10 @@
         </div>
 
         <footer
-          v-if="!addingNewTodo"
           class="card-footer has-text-weight-semibold"
           :style="{ borderColor, backgroundColor: lighterColor }">
           <div
+            v-if="!addingNewTodo"
             :class="[
               todoIsDone ? 'is-done' : '',
               'card-footer-item is-clickable done-btn is-flex',
@@ -165,7 +178,6 @@
             :style="{ borderColor }"
             @click="toggleDone">
             <div
-              :ref="`card${id}progress`"
               class="progress-bar"
               :style="{ transform: `scaleX(${progressPercent})` }" />
             <b-icon
@@ -173,6 +185,22 @@
               icon="check-all"
               class="pr-2" />
             {{ todoIsDone ? "Completed" : "Mark as complete" }}
+          </div>
+
+          <div
+            v-if="addingNewTodo"
+
+            class="card-footer-item is-clickable done-btn"
+            :style="{ borderColor }"
+            @click="toggleDone">
+            Cancel
+          </div>
+          <div
+            v-if="addingNewTodo"
+            class="card-footer-item is-clickable done-btn"
+            :style="{ borderColor }"
+            @click="submitAddTodo">
+            Submit
           </div>
         </footer>
 
@@ -189,10 +217,14 @@
 import { mapState, mapActions } from 'vuex'
 import { cloneDeep, isEqual } from 'lodash'
 import TodoStep from './TodoStep.vue'
+import ColorElement from './ColorElement.vue'
+import ColorSwatch from './ColorSwatch.vue'
 
 export default {
   components: {
-    TodoStep
+    TodoStep,
+    ColorElement,
+    ColorSwatch
   },
   props: {
     id: {
@@ -225,7 +257,7 @@ export default {
       'cardPoppedUp',
       'formValidationStatus',
       'cardIsShaking',
-      'error',
+      'message',
       'disableInteraction',
       'newTodo'
     ]),
@@ -233,7 +265,8 @@ export default {
       return this.loader.status && this.loader.todoId === this.todo.id
     },
     lighterColor () {
-      return this.$color(this.todo.color).lighten(0.42)
+      return this.$color(this.todo.color).lighten(0.44)
+      // return this.todo.color
     },
     darkerColor () {
       return this.$color(this.todo.color).darken(0.5).desaturate(0.2)
@@ -289,13 +322,21 @@ export default {
       immediate: true,
       deep: true,
       handler (newValue, oldValue) {
-        if (!isEqual(newValue, oldValue)) this.todo = cloneDeep(newValue)
+        if (!isEqual(newValue, oldValue)) {
+          console.log('res', newValue)
+          this.todo = cloneDeep(newValue)
+          console.log('resCp', this.todo)
+        }
       }
     },
     'todo.title' (value) {
+      if (!this.editModeIsActive || this.addingNewTodo) return
+      console.log('title watcher')
       if (this.formValidationStatus.status && !value.trim()) {
+        console.log('title invalid')
         this.updateFormValidationStatus({ status: false, todoId: this.id })
       } else if (!this.formValidationStatus.status && value.trim()) {
+        console.log('title valid')
         this.updateFormValidationStatus({ status: true, todoId: this.id })
       }
     }
@@ -329,7 +370,8 @@ export default {
       'updateFormValidationStatus',
       'updateCardIsShaking',
       'updateDisableInteraction',
-      'updateNewTodo'
+      'updateNewTodo',
+      'addTodo'
     ]),
     toggleDone () {
       this.todo.done = !this.todo.done
@@ -339,6 +381,7 @@ export default {
       this.updateDisableInteraction({ status: true, todoId: this.id })
       this.updateTodo(this.todo).finally(() => {
         this.todo = cloneDeep(this.todop)
+        this.parseDueDate()
       })
     },
 
@@ -367,7 +410,7 @@ export default {
       const differenceIsADayOrMore = Math.abs(diff) >= 0.5
       const parsedDate = differenceIsADayOrMore
         ? this.$dayjs(this.$dayjs(this.todo.dueDate)).calendar(null, {
-          sameElse: 'MMMM D, cardWrapperRefcardWrapperRef h:mm A'
+          sameElse: 'dddd, MMMM D, YYYY h:mm A'
         })
         : this.$dayjs(this.$dayjs(this.todo.dueDate)).fromNow()
 
@@ -383,17 +426,21 @@ export default {
       const cardFlipState = this.$Flip.getState(`#search-box, #card${this.id}wrapper`)
       this.updateBackdrop(status)
       if (status) {
-        this.todoInfoBefore = cloneDeep(this.todo)
+        this.todoInfoBeforePop = cloneDeep(this.todo)
         this.searchBoxRef.classList.add('popup')
         this.cardWrapperRef.style.display = 'block'
+
+        this.addStep()
       } else {
         this.searchBoxRef.classList.remove('popup')
         this.cardWrapperRef.style.display = 'none'
-        if (!isEqual(this.todo, this.todoInfoBefore)) {
-          // this.updateStepsOrder()
-          // this.updateTodoAndFetch()
-          // this.parseDueDate()
-        }
+        this.restForm()
+        // this.todo = cloneDeep(this.todoInfoBeforePop)
+        // if (!isEqual(this.todo, this.todoInfoBeforePop)) {
+        // //   // this.updateStepsOrder()
+        // //   // this.updateTodoAndFetch()
+        // //   // this.parseDueDate()
+        // }
       }
 
       this.$Flip.from(cardFlipState, {
@@ -414,7 +461,7 @@ export default {
       this.updateBackdrop(status)
 
       if (status) {
-        this.todoInfoBefore = cloneDeep(this.todo)
+        this.todoInfoBeforePop = cloneDeep(this.todo)
         this.cardParentRef.style.height = `${this.cardParentRef.offsetHeight}px`
         this.popUpContainerRef.appendChild(this.cardWrapperRef)
         this.addStep()
@@ -422,7 +469,7 @@ export default {
         this.cardParentRef.appendChild(this.cardWrapperRef)
         this.todo.steps.pop()
 
-        if (!isEqual(this.todo, this.todoInfoBefore)) {
+        if (!isEqual(this.todo, this.todoInfoBeforePop)) {
           this.updateStepsOrder()
           this.updateTodoAndFetch()
           this.parseDueDate()
@@ -463,6 +510,45 @@ export default {
         }
       )
     },
+    async submitAddTodo () {
+      // if (!isEqual(this.todo, this.todoInfoBeforePop)) {
+      // if (this.formValidationStatus.status && !this.todo.title.trim()) {
+      //   console.log('title invalid')
+      //   this.updateFormValidationStatus({ status: false, todoId: this.id })
+      //   return
+      // } else if (!this.formValidationStatus.status && this.todo.title.trim()) {
+      //   console.log('title valid')
+      //   this.updateFormValidationStatus({ status: true, todoId: this.id })
+      // }
+
+      this.validateTitle()
+      if (this.titleIsNotValid) {
+        this.shake()
+        return
+      }
+      try {
+        this.todo.steps.pop()
+        console.log('init', this.todo)
+        await this.addTodo(this.todo)
+        this.updateBackdrop(false)
+        this.updateCardPoppedUp({
+          status: false,
+          todoId: this.cardPoppedUp.todoId
+        })
+        this.restForm()
+      } catch (error) {
+
+      }
+
+      //   // this.updateStepsOrder()
+      //   // this.updateTodoAndFetch()
+      //   // this.parseDueDate()
+      // }
+    },
+    restForm () {
+      this.titleIsNotValid = false
+      this.todo = cloneDeep(this.todoInfoBeforePop)
+    },
     popUp () {
       this.updateCardPoppedUp({ status: true, todoId: this.id })
     },
@@ -483,6 +569,7 @@ export default {
       }
     },
     validateTitle () {
+      // if (!this.editModeIsActive || this.addingNewTodo) return
       this.titleIsNotValid = !this.todo.title.trim()
     }
   }
@@ -539,7 +626,7 @@ export default {
     overflow: hidden
     border-radius: 0 0 1em 1em
     &-item
-      border-radius: 0 0 1em 1em
+      // border-radius: 0 0 1em 1em
 
 ::v-deep
   .header
@@ -645,7 +732,7 @@ export default {
   transition: transform .2s ease-out
 
 .done-btn
-  border-bottom-right-radius: 1em
+  // border-bottom-right-radius: 1em
   position: relative
   overflow: hidden
   &::after
