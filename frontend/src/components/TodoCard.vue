@@ -9,16 +9,16 @@
       'card-parent',
     ]">
     <div
-      :ref="`card${id}`"
+      :ref="`card${id}wrapper`"
       class="card-wrapper">
       <div
+        :ref="`card${id}`"
         class="card has-text-left todo-item"
         :style="{ backgroundColor: lighterColor, boxShadow }">
-        <div
-          :ref="`card${id}content`"
-          class="card-content">
+        <div class="card-content">
           <!-- Actions -->
           <b-dropdown
+            v-if="id !== 'new'"
             v-show="!editModeIsActive"
             aria-role="list"
             :triggers="['hover']"
@@ -56,17 +56,18 @@
                   v-model="todo.title"
                   placeholder="Title"
                   size="is-large"
-                  autofocus
+                  :autofocus="id !== 'new'"
                   :class="[
                     todoIsDone ? 'is-step-done' : '',
                     'header has-text-weight-bold is-size-4',
-                  ]">
+                  ]"
+                  @blur="validateTitle">
                   {{ todo.title }}
                 </component>
               </div>
               <div
-                v-if="!todo.title.trim()"
-                class="is-family-secondary is-size-7 has-text-weight-semibold has-text-danger pt-3">
+                v-if="titleIsNotValid"
+                class="is-family-code is-size-7 has-text-weight-bold has-text-danger pt-3">
                 Can't do it! Title is required ¯\_(ツ)_/¯
               </div>
             </div>
@@ -150,13 +151,9 @@
         </div>
 
         <footer
+          v-if="id !== 'new'"
           class="card-footer has-text-weight-semibold"
           :style="{ borderColor, backgroundColor: lighterColor }">
-          <!-- <span
-                class="card-footer-item is-clickable"
-                :style="{ borderColor }">
-                Edit
-              </span> -->
           <div
             :class="[
               todoIsDone ? 'is-done' : '',
@@ -196,7 +193,7 @@ export default {
   },
   props: {
     id: {
-      type: Number,
+      type: [Number, String],
       required: true
     },
     todop: {
@@ -207,6 +204,7 @@ export default {
   data () {
     return {
       todo: {},
+      titleIsNotValid: false,
       due: {
         date: '',
         color: 'yellow',
@@ -223,7 +221,8 @@ export default {
       'formValidationStatus',
       'cardIsShaking',
       'error',
-      'disableInteraction'
+      'disableInteraction',
+      'newTodo'
     ]),
     isLoading () {
       return this.loader.status && this.loader.todoId === this.todo.id
@@ -241,6 +240,7 @@ export default {
         .alpha(0.5)
     },
     boxShadow () {
+      if (this.id === 'new') return 'none'
       const outside = `0 .5em 1.5em -.1em ${this.lighterColor}`
       const inside = `inset 0 0 .25em 1em ${this.borderColor.alpha(0.05)}`
       return this.editModeIsActive ? `${inside}` : `${inside}, ${outside}`
@@ -300,9 +300,13 @@ export default {
   mounted () {
     this.popUpContainerRef = document.getElementById('pop-up-container')
     this.cardParentRef = document.getElementById(`card${this.id}parent`)
+    this.cardWrapperRef = this.$refs[`card${this.id}wrapper`]
     this.cardRef = this.$refs[`card${this.id}`]
-    this.cardContentRef = this.$refs[`card${this.id}content`]
     this.cardProgressRef = this.$refs[`card${this.id}progress`]
+    // if (this.id === 'new') this.cardParentRef.style.visibility = 'hidden'
+    if (this.id === 'new') this.cardWrapperRef.style.height = '0'
+
+    // if (this.id === 'new') this.cardWrapperRef.style.opacity = '0'
     // this.cardParentRef = this.$refs[`card${this.id}parent`]
     // this.popUpContainerRef = this.$refs['pop-up-container']
   },
@@ -313,7 +317,8 @@ export default {
       'updateCardPoppedUp',
       'updateFormValidationStatus',
       'updateCardIsShaking',
-      'updateDisableInteraction'
+      'updateDisableInteraction',
+      'updateNewTodo'
     ]),
     toggleDone () {
       this.todo.done = !this.todo.done
@@ -363,18 +368,23 @@ export default {
     togglePopUpCard ({ status, todoId }) {
       if (todoId !== this.id) return
 
-      const cardFlipState = this.$Flip.getState(this.cardRef)
-      this.cardRef.style.zIndex = 2000
+      const cardFlipState = this.$Flip.getState(this.cardWrapperRef)
+      this.cardWrapperRef.style.zIndex = 2000
       this.updateBackdrop(status)
 
       if (status) {
         this.todoInfoBefore = cloneDeep(this.todo)
         this.popUpContainerRef.style.visibility = 'visible'
         this.cardParentRef.style.height = `${this.cardParentRef.offsetHeight}px`
-        this.popUpContainerRef.appendChild(this.cardRef)
+        this.popUpContainerRef.appendChild(this.cardWrapperRef)
         this.addStep()
+        if (this.id === 'new') this.cardWrapperRef.style.height = 'initial'
+
+        // if (this.id === 'new') this.cardWrapperRef.style.opacity = '1'
+        // if (this.id === 'new') this.cardParentRef.style.visibility = 'visible'
+        // if (this.id === 'new') this.cardParentRef.style.height = 'initial'
       } else {
-        this.cardParentRef.appendChild(this.cardRef)
+        this.cardParentRef.appendChild(this.cardWrapperRef)
         this.todo.steps.pop()
         if (!isEqual(this.todo, this.todoInfoBefore)) {
           this.updateStepsOrder()
@@ -385,11 +395,14 @@ export default {
 
       const onComplete = () => {
         if (status) {
-          this.$refs[`title${this.id}`].focus()
+          if (this.id !== 'new') this.$refs[`title${this.id}`].focus()
         } else {
           this.popUpContainerRef.style.visibility = 'hidden'
-          this.cardParentRef.style.height = 'initial'
-          this.cardRef.style.zIndex = 'initial'
+          this.cardParentRef.style.height = this.id === 'new' ? '0' : 'initial'
+          this.cardWrapperRef.style.zIndex = 'initial'
+          if (this.id === 'new') this.cardWrapperRef.style.height = '0'
+          // if (this.id === 'new') this.cardWrapperRef.style.opacity = '0'
+          // if (this.id === 'new') this.cardParentRef.style.visibility = 'hidden'
         }
       }
 
@@ -403,14 +416,14 @@ export default {
     },
     shake () {
       this.$gsap.fromTo(
-        this.cardRef,
+        this.cardWrapperRef,
         { x: -5 },
         {
           duration: 0.01,
           x: 5,
           clearProps: 'x',
           repeat: 30,
-          // onStart: () => { this.cardRef.style.opacity = 0 },
+          // onStart: () => { this.cardWrapperRef.style.opacity = 0 },
           onComplete: () =>
             this.updateCardIsShaking({ status: false, todoId: null })
         }
@@ -434,6 +447,9 @@ export default {
       for (let i = 0; i < this.todo.steps.length; i++) {
         this.todo.steps[i].order = i + 1
       }
+    },
+    validateTitle () {
+      this.titleIsNotValid = !this.todo.title.trim()
     }
   }
 }

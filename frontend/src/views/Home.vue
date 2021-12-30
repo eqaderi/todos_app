@@ -1,6 +1,8 @@
 <template>
   <div class="home">
-    <CreateTodo :search-phrase.sync="searchPhrase" />
+    <CreateTodo
+      :search-phrase.sync="searchPhrase"
+      @clear-search="searchPhrase=''" />
     <div class="container">
       <TodosList :todos="filteredTodos" />
       <EmptyState

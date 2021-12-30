@@ -70,7 +70,8 @@ export default new Vuex.Store({
     disableInteraction: {
       status: false,
       todoId: null
-    }
+    },
+    newTodo: false
   },
   mutations: {
     SET_TODOS (state, payload) {
@@ -110,6 +111,9 @@ export default new Vuex.Store({
     SET_DISABLE_INTERACTION (state, { status, todoId }) {
       state.disableInteraction.status = status
       state.disableInteraction.todoId = todoId
+    },
+    SET_NEW_TODO (state, status) {
+      state.newTodo = status
     }
   },
   actions: {
@@ -198,6 +202,9 @@ export default new Vuex.Store({
           todoIs: null
         })
       }, 1)
+    },
+    updateNewTodo ({ commit }, status) {
+      commit('SET_NEW_TODO', status)
     }
   },
   getters: {

@@ -3,16 +3,16 @@
     <section class="hero is-medium">
       <div class="hero-body">
         <div class="container has-text-centered">
-          <p class="title is-size-1 has-text-weight-normal is-family-primary pb-4">
+          <p class="title is-size-1 has-text-weight-normal is-family-code pb-4">
             My Todos !
           </p>
           <p class="subtitle">
             A fun to use todo app to accomplish more and get organized.
           </p>
           <div class="columns is-tablet is-centered pt-5">
-            <div
-              class="column is-half">
-              <div class="is-flex is-justify-content-space-between is-align-items-center">
+            <div class="column is-half">
+              <div
+                class="is-flex is-justify-content-space-between is-align-items-center">
                 <b-input
                   v-model="searchPhraseC"
                   class="is-flex-grow-1"
@@ -24,13 +24,19 @@
                   class="ml-5"
                   size="is-medium"
                   icon-left="plus"
-                  rounded>
+                  rounded
+                  @click="AddNewTodo">
                   Add a new one
                 </b-button>
               </div>
-            </div>
 
-            <!-- <TodoCard /> -->
+              <div class="is-relative">
+                <TodoCard
+                  :id="newTodo.id"
+                  class="is-absolute"
+                  :todop="newTodo" />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -39,9 +45,10 @@
 </template>
 
 <script>
-// import TodoCard from './TodoCard.vue'
+import { mapState, mapActions } from 'vuex'
+import TodoCard from './TodoCard.vue'
 export default {
-  // components: { TodoCard },
+  components: { TodoCard },
   props: {
     searchPhrase: {
       type: String,
@@ -51,26 +58,21 @@ export default {
   data () {
     return {
       newTodo: {
-        id: 0,
+        id: 'new',
         createdAt: null,
-        color: '#ffffff',
+        color: '#ff0000',
         title: '',
         description: '',
-        steps: [
-          {
-            order: null,
-            text: '',
-            done: false
-          }
-        ],
+        steps: [],
         dueDate: null,
         done: false
       }
     }
   },
   computed: {
+    ...mapState(['todos']),
     searchPhraseC: {
-    // getter
+      // getter
       get: function () {
         return this.searchPhrase
       },
@@ -79,11 +81,23 @@ export default {
         this.$emit('update:search-phrase', newValue)
       }
     }
+  },
+  methods: {
+    ...mapActions(['updateNewTodo', 'updateCardPoppedUp']),
+    AddNewTodo () {
+      this.$emit('clear-search')
+      // this.updateNewTodo(true)
+      this.updateCardPoppedUp({ status: true, todoId: this.newTodo.id })
+    }
   }
-
 }
 </script>
 
 <style lang="sass" scoped>
-
+.is-absolute
+  position: absolute
+  top: 0
+  bottom: 0
+  left: 0
+  right: 0
 </style>
