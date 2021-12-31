@@ -143,6 +143,7 @@ export default new Vuex.Store({
     },
 
     async addTodo ({ commit, dispatch }, todoObj) {
+      commit('SET_DISABLE_INTERACTION', { status: true, todoId: todoObj.id })
       commit('UPDATE_LOADER', { status: true, todoId: 'new' })
 
       const pyNormalized = normalizeForPython(todoObj)
@@ -174,6 +175,7 @@ export default new Vuex.Store({
     },
 
     async deleteTodo ({ commit, dispatch }, todoId) {
+      commit('SET_DISABLE_INTERACTION', { status: true, todoId: todoId })
       commit('UPDATE_LOADER', { status: true, todoId: 'delete' })
 
       // let res = {}
@@ -204,7 +206,7 @@ export default new Vuex.Store({
     },
 
     updateTodo: pDebounce(async ({ commit, dispatch }, todoObj) => {
-      // commit('SET_DISABLE_INTERACTION', { status: true, todoId: todoObj.id })
+      commit('SET_DISABLE_INTERACTION', { status: true, todoId: todoObj.id })
       const commitLoaderUpdate = () =>
         commit('UPDATE_LOADER', { status: true, todoId: todoObj.id })
       const debouncedCommitLoaderUpdate = debounce(commitLoaderUpdate, 500)

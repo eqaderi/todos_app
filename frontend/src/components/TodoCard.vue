@@ -382,18 +382,6 @@ export default {
       'addTodo',
       'deleteTodo'
     ]),
-    toggleDone () {
-      if (this.editModeIsActive) return
-      this.todo.done = !this.todo.done
-      this.updateTodoAndFetch()
-    },
-    updateTodoAndFetch () {
-      this.updateDisableInteraction({ status: true, todoId: this.id })
-      this.updateTodo(this.todo).finally(() => {
-        this.todo = cloneDeep(this.todop)
-        this.parseDueDate()
-      })
-    },
 
     parseDueDate () {
       if (!this.todo.dueDate) return
@@ -532,6 +520,17 @@ export default {
         this.closeForm()
       } catch (error) {
       }
+    },
+    toggleDone () {
+      if (this.editModeIsActive) return
+      this.todo.done = !this.todo.done
+      this.updateTodoAndFetch()
+    },
+    updateTodoAndFetch () {
+      this.updateTodo(this.todo).finally(() => {
+        this.todo = cloneDeep(this.todop)
+        this.parseDueDate()
+      })
     },
     closeForm () {
       this.updateBackdrop(false)
