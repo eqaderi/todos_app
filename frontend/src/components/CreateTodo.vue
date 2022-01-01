@@ -1,5 +1,8 @@
 <template>
   <div>
+    <div
+      id="pop-up-container"
+      ref="pop-up-container" />
     <section class="hero is-medium">
       <div class="hero-body">
         <div class="container has-text-centered">
@@ -12,25 +15,26 @@
           <div class="columns is-tablet is-centered pt-5">
             <div class="column is-half">
               <div
-                class="is-flex is-justify-content-space-between is-align-items-center">
+                class="columns is-tablet">
                 <b-input
                   id="search-box"
                   v-model="searchPhraseC"
                   data-flip-id="new"
-                  class="is-flex-grow-1 search-box"
+                  class="column is-three-fifths search-box"
                   placeholder="Search for todos in titles and desc..."
                   size="is-medium"
                   rounded
                   autofocus />
-                <b-button
-                  class="ml-5"
-                  size="is-medium"
-                  type="is-primary"
-                  icon-left="plus"
-                  rounded
-                  @click="AddNewTodo">
-                  Add a new one
-                </b-button>
+                <div class="column ">
+                  <b-button
+                    size="is-medium"
+                    type="is-primary"
+                    icon-left="plus"
+                    rounded
+                    @click="AddNewTodo">
+                    Add a new one
+                  </b-button>
+                </div>
               </div>
 
               <div class="is-relative">
@@ -63,7 +67,7 @@ export default {
       newTodo: {
         id: 'new',
         createdAt: new Date(),
-        color: '#673ab7',
+        color: '#ff5722',
         title: '',
         description: '',
         dueDate: null,

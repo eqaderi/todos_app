@@ -1,52 +1,23 @@
-import { debounce } from 'lodash'
-const commitLoaderUpdate = (commit, status, item) =>
-  commit('UPDATE_LOADER', {
-    status,
-    todoId: item ? item.id : 'all'
-  })
+const COLORS = [
+  '#f44336',
+  '#e91e63',
+  '#9c27b0',
+  '#673ab7',
+  '#3f51b5',
+  '#2196f3',
+  '#03a9f4',
+  '#00bcd4',
+  '#009688',
+  '#4caf50',
+  '#8bc34a',
+  '#cddc39',
+  '#ffeb3b',
+  '#ffc107',
+  '#ff9800',
+  '#ff5722',
+  '#795548',
+  '#9e9e9e',
+  '#607d8b'
+]
 
-export function debouncedAction ({
-  context,
-  item,
-  leading = false,
-  wait = 500,
-  updateLoaderWait = 500,
-  apiFunction,
-  dataMutation
-}) {
-  return debounce(
-    async () => {
-      const updateLoader = commitLoaderUpdate(context.commit, true, item)
-      const dbUpdateLoader = debounce(updateLoader, updateLoaderWait)
-      dbUpdateLoader()
-
-      const result = await apiFunction(item)
-
-      dbUpdateLoader.cancel()
-      context.commit(dataMutation, { result })
-      commitLoaderUpdate(context.commit, false, item)
-    },
-    wait,
-    { leading }
-  )
-}
-
-export function sm ({
-  context,
-  item,
-  updateLoaderWait = 500,
-  apiFunction,
-  dataMutation
-}) {
-  return async () => {
-    const updateLoader = commitLoaderUpdate(context.commit, true, item)
-    const dbUpdateLoader = debounce(updateLoader, updateLoaderWait)
-    dbUpdateLoader()
-
-    const result = item ? await apiFunction(item) : await apiFunction(item)
-
-    dbUpdateLoader.cancel()
-    context.commit(dataMutation, { result })
-    commitLoaderUpdate(context.commit, false, item)
-  }
-}
+export { COLORS }

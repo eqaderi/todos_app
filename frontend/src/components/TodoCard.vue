@@ -23,7 +23,9 @@
           <b-dropdown
             v-if="!addingNewTodo"
             v-show="!editModeIsActive"
+            :mobile-modal="false"
             aria-role="list"
+            position="is-bottom-left"
             :triggers="['hover']"
             class="actions is-clickable">
             <template #trigger>

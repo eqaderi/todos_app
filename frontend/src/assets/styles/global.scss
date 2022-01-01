@@ -1,4 +1,11 @@
+// Import Bulma's core
+@import "~bulma/sass/utilities/_all";
 
+// Change variables here
+
+// Import Bulma and Buefy styles
+@import "~bulma";
+@import "~buefy/src/scss/buefy";
 
 #app {
   // font-family: Avenir, Helvetica, Arial, sans-serif;
@@ -6,6 +13,21 @@
   -moz-osx-font-smoothing: grayscale;
   // text-align: center;
   // color: #2c3e50;
+}
+
+
+#pop-up-container {
+  position: fixed;
+  border-radius: 1em;
+  top: 8vh;
+  left: 8vw;
+  right: 8vw;
+  z-index: 1000;
+  @include from(1280px) {
+    top: 15vh;
+    left: 25vw;
+    right: 25vw;
+  }
 }
 
 .is-full-width {

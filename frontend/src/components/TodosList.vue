@@ -1,8 +1,5 @@
 <template>
   <div>
-    <div
-      id="pop-up-container"
-      ref="pop-up-container" />
     <transition-group
       name="fade"
       tag="div"
@@ -20,16 +17,12 @@
 
 <script>
 import TodoCard from '@/components/TodoCard.vue'
+import { mapState } from 'vuex'
 export default {
   components: {
     TodoCard
   },
-  props: {
-    todos: {
-      type: Array,
-      required: true
-    }
-  },
+  computed: mapState(['todos']),
   methods: {
     beforeLeave (el) {
       const { marginLeft, marginTop, width, height } = window.getComputedStyle(el)
@@ -42,16 +35,6 @@ export default {
 }
 </script>
 <style lang="sass" scoped>
-#pop-up-container
-  position: fixed
-  border-radius: 1em
-  top: 15vh
-  left: 25vw
-  right: 25vw
-  // transform: translateY(-50%)
-  z-index: 1000
-  // visibility: hidden
-
 .fade-enter-active, .fade-leave-active
   transition: opacity .24s ease-out, transform .24s ease-out
 

@@ -94,7 +94,6 @@ export default new Vuex.Store({
     DELETE_TODO (state, todoId) {
       const index = state.todos.findIndex(({ id }) => +id === +todoId)
       state.todos.splice(index, 1)
-      // Vue.set(state.todos, index, payload)
     },
     UPDATE_TODO (state, payload) {
       const todoId = payload.id
