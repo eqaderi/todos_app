@@ -99,8 +99,9 @@ class UserLogoutRefresh(Resource):
 class TokenRefresh(Resource):
     @jwt_required(refresh=True)
     def post(self):
-        current_user = get_jwt_identity()
-        access_token = create_access_token(identity = current_user)
+        current_user_name = get_jwt_identity()
+        # current_usr_id = UserModel.find_by_username(current_user_name).id
+        access_token = create_access_token(identity = current_user_name)
         return {'access_token': access_token}
 
 
@@ -120,12 +121,19 @@ class SecretResource(Resource):
         }
 
 class UserTodos(Resource):
+    @jwt_required()
     def get(self):
-        todos = TodoModel.query.all()
+        current_user_name = get_jwt_identity()
+        current_usr_id = UserModel.find_by_username(current_user_name).id
+        todos = TodoModel.query.filter_by(user_id=current_usr_id).all()
         return todo_models_schema.dump(todos)
 
 
+    @jwt_required()
     def post(self):
+        current_user_name = get_jwt_identity()
+        current_usr_id = UserModel.find_by_username(current_user_name).id
+
         data = get_todo_parser.parse_args()
 
         new_todo = TodoModel(
@@ -135,7 +143,8 @@ class UserTodos(Resource):
             color = data['color'],
             description = data['description'],
             done = data['done'],
-            steps = data['steps']
+            steps = data['steps'],
+            user_id = current_usr_id
         )
 
         try:
@@ -145,8 +154,12 @@ class UserTodos(Resource):
             return {'message': 'Something went wrong'}, 500
 
 
+    @jwt_required()
     def patch(self, todo_id):
-        todo = TodoModel.query.get_or_404(todo_id)
+        current_user_name = get_jwt_identity()
+        current_usr_id = UserModel.find_by_username(current_user_name).id
+
+        todo = TodoModel.query.filter_by(user_id=current_usr_id, id=todo_id).first_or_404()
         data = update_todo_parser.parse_args()
 
         if data['title']:
@@ -167,6 +180,8 @@ class UserTodos(Resource):
         if data['steps']:
             todo.steps = data['steps']
 
+        todo.user_id = current_usr_id
+
         try:
             TodoModel.patch_to_db()
             return todo_model_schema.dump(todo)
@@ -174,10 +189,11 @@ class UserTodos(Resource):
             return {'message': 'Something went wrong'}, 500
 
 
+    @jwt_required()
     def delete(self, todo_id):
-        try:
-            todo = TodoModel.query.get_or_404(todo_id)
-            todo.delete_from_db()
-            return '', 204
-        except:
-            return {'message': 'Something went wrong'}, 500
+        current_user_name = get_jwt_identity()
+        current_usr_id = UserModel.find_by_username(current_user_name).id
+
+        todo = TodoModel.query.filter_by(user_id=current_usr_id, id=todo_id).first_or_404()
+        todo.delete_from_db()
+        return '', 204
