@@ -1,8 +1,10 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import { fetchTodos, addTodo, deleteTodo, updateTodo } from '@/api'
+import axios from 'axios'
 import pDebounce from 'p-debounce'
 import { debounce, cloneDeep, mapKeys, camelCase, snakeCase } from 'lodash'
+import { register, login, logout, fetchTodos, addTodo, deleteTodo, updateTodo } from '@/api'
+import router from '@/router'
 
 Vue.use(Vuex)
 
@@ -72,7 +74,8 @@ export default new Vuex.Store({
       status: false,
       todoId: null
     },
-    newTodo: false
+    newTodo: false,
+    currentUser: {}
   },
   mutations: {
     SET_TODOS (state, payload) {
@@ -125,21 +128,37 @@ export default new Vuex.Store({
     },
     SET_NEW_TODO (state, status) {
       state.newTodo = status
+    },
+    SET_CURRENT_USER (state, data) {
+      if (data.access_token) {
+        state.currentUser = data
+        localStorage.setItem('currentUser', JSON.stringify(data))
+        axios.defaults.headers.common.Authorization = `Bearer ${data.access_token}`
+      } else {
+        localStorage.removeItem('currentUser')
+      }
     }
   },
   actions: {
-    async loadTodos ({ commit }) {
-      const commitLoaderUpdate = () =>
-        commit('UPDATE_LOADER', { status: true, todoId: 'all' })
-      const debounced = debounce(commitLoaderUpdate, 500)
+    async loadTodos ({ commit, dispatch }) {
+      commit('UPDATE_LOADER', { status: true, todoId: 'allTodos' })
 
-      debounced()
-      const rawTodos = await fetchTodos()
+      let rawTodos = []
+      try {
+        rawTodos = await fetchTodos()
+      } catch (error) {
+        console.error('eeeee', error)
+        dispatch('updateMessage', {
+          code: error.status,
+          type: 'is-danger',
+          text: error.message,
+          todoId: null // TODO
+        })
+      }
       const todos = rawTodos.map(normalizeForJavascript)
 
-      debounced.cancel()
       commit('SET_TODOS', { todos })
-      commit('UPDATE_LOADER', { status: false, todoId: 'all' })
+      commit('UPDATE_LOADER', { status: false, todoId: null })
     },
 
     async addTodo ({ commit, dispatch }, todoObj) {
@@ -158,7 +177,7 @@ export default new Vuex.Store({
         })
       } catch (error) {
         dispatch('updateMessage', {
-          code: error.code,
+          code: error.status,
           type: 'is-danger',
           text: error.message,
           todoId: null // TODO
@@ -189,7 +208,7 @@ export default new Vuex.Store({
         })
       } catch (error) {
         dispatch('updateMessage', {
-          code: error.code,
+          code: error.status,
           type: 'is-danger',
           text: error.message,
           todoId: todoId
@@ -205,17 +224,40 @@ export default new Vuex.Store({
       commit('DELETE_TODO', todoId)
     },
 
-    updateTodo: pDebounce(async ({ commit, dispatch }, todoObj) => {
+    updateTodo: pDebounce(async ({ state, commit, dispatch }, { id, todoObj }) => {
       commit('SET_DISABLE_INTERACTION', { status: true, todoId: todoObj.id })
       const commitLoaderUpdate = () =>
         commit('UPDATE_LOADER', { status: true, todoId: todoObj.id })
       const debouncedCommitLoaderUpdate = debounce(commitLoaderUpdate, 500)
       debouncedCommitLoaderUpdate()
 
+      const reqId = todoObj.id
+      const index = state.todos.findIndex(({ id }) => +id === +reqId)
+
+      const reqAllStepsDone = todoObj.steps.every(({ done }) => done)
+      const reqDone = todoObj.done
+      const currentAllStepsDone = state.todos[index].steps.every(({ done }) => done)
+
+      if (todoObj.steps.length) {
+        if (reqAllStepsDone && !currentAllStepsDone && !reqDone) {
+          todoObj.done = true
+        } else if (!reqAllStepsDone && currentAllStepsDone && reqDone) {
+          todoObj.done = false
+        } else if (!reqAllStepsDone && reqDone) {
+          todoObj.steps.forEach((element) => {
+            element.done = true
+          })
+        } else if (currentAllStepsDone && !reqDone) {
+          todoObj.steps.forEach((element) => {
+            element.done = false
+          })
+        }
+      }
+
       const pyNormalized = normalizeForPython(todoObj)
       let rawTodo = {}
       try {
-        rawTodo = await updateTodo(pyNormalized)
+        rawTodo = await updateTodo(id, pyNormalized)
 
         dispatch('updateMessage', {
           code: 200,
@@ -225,7 +267,7 @@ export default new Vuex.Store({
         })
       } catch (error) {
         dispatch('updateMessage', {
-          code: error.code,
+          code: error.status,
           type: 'is-danger',
           text: error.message,
           todoId: todoObj.id
@@ -279,6 +321,75 @@ export default new Vuex.Store({
     },
     updateNewTodo ({ commit }, status) {
       commit('SET_NEW_TODO', status)
+    },
+    async register ({ commit, dispatch }, credentials) {
+      let data = {}
+      try {
+        data = await register(credentials)
+      } catch (error) {
+        const err = error.toJSON()
+        const msg = +err.status === 409 ? 'This username already exists' : err.message
+        dispatch('updateMessage', {
+          code: err.status,
+          type: 'is-danger',
+          text: msg,
+          todoId: null
+        })
+      }
+
+      commit('SET_CURRENT_USER', data)
+      dispatch('updateMessage', {
+        code: 200,
+        type: 'is-success',
+        text: 'User registered!',
+        todoId: null
+      })
+    },
+    async login ({ commit, dispatch }, credentials) {
+      let data = {}
+      try {
+        data = await login(credentials)
+      } catch (error) {
+        const err = error.toJSON()
+        dispatch('updateMessage', {
+          code: err.status,
+          type: 'is-danger',
+          text: err.message,
+          todoId: null
+        })
+      }
+
+      commit('SET_CURRENT_USER', data)
+      dispatch('updateMessage', {
+        code: 200,
+        type: 'is-success',
+        text: 'User logged in!',
+        todoId: null
+      })
+    },
+    async logout ({ commit, dispatch }) {
+      try {
+        await logout()
+      } catch (error) {
+        const err = error.toJSON()
+        dispatch('updateMessage', {
+          code: err.status,
+          type: 'is-danger',
+          text: err.message,
+          todoId: null
+        })
+      }
+
+      commit('SET_CURRENT_USER', {
+        message: '', access_token: '', refresh_token: ''
+      })
+      dispatch('updateMessage', {
+        code: 200,
+        type: 'is-success',
+        text: 'User logged out!',
+        todoId: null
+      })
+      router.push({ name: 'Login' })
     }
   },
   getters: {

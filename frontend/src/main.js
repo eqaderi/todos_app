@@ -10,6 +10,7 @@ import calendar from 'dayjs/plugin/calendar'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { gsap } from 'gsap'
 import { Flip } from 'gsap/Flip'
+import axios from 'axios'
 
 dayjs.extend(calendar)
 dayjs.extend(relativeTime)
@@ -27,5 +28,24 @@ Vue.config.productionTip = false
 new Vue({
   router,
   store,
+  created () {
+    const userString = localStorage.getItem('currentUser')
+    if (userString) {
+      const userData = JSON.parse(userString)
+      this.$store.commit('SET_CURRENT_USER', userData)
+    }
+    //
+    axios.interceptors.response.use(
+      response => response,
+      error => {
+        console.log(error.response)
+        if (error.response.status === 401) {
+          this.$router.push('/login')
+          this.$store.dispatch('logout')
+        }
+        return Promise.reject(error)
+      }
+    )
+  },
   render: h => h(App)
 }).$mount('#app')

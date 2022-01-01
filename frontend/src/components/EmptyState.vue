@@ -8,8 +8,11 @@
       <b-button @click="$emit('clear-search')">Clear your search and try again</b-button>
     </div>
     <span
-      v-else
+      v-else-if="loader.todoId === 'all' && loader.status === true"
       class="is-size-4 is-family-code">Loading ...</span>
+    <span
+      v-else
+      class="is-size-4 is-family-code">Add some todos to start ... {{ face }}</span>
   </div>
 </template>
 
@@ -32,7 +35,7 @@ export default {
     }
   },
 
-  computed: mapState(['todos']),
+  computed: mapState(['todos', 'loader']),
   created () {
     this.face = this.emojis[Math.floor(Math.random() * this.emojis.length)]
   }

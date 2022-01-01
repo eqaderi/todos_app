@@ -433,12 +433,6 @@ export default {
         this.searchBoxRef.classList.remove('popup')
         this.cardWrapperRef.style.display = 'none'
         this.restForm()
-        // this.todo = cloneDeep(this.todoInfoBeforePop)
-        // if (!isEqual(this.todo, this.todoInfoBeforePop)) {
-        // //   // this.updateStepsOrder()
-        // //   // this.updateTodoAndFetch()
-        // //   // this.parseDueDate()
-        // }
       }
 
       this.$Flip.from(cardFlipState, {
@@ -527,7 +521,7 @@ export default {
       this.updateTodoAndFetch()
     },
     updateTodoAndFetch () {
-      this.updateTodo(this.todo).finally(() => {
+      this.updateTodo({ id: this.id, todoObj: this.todo }).finally(() => {
         this.todo = cloneDeep(this.todop)
         this.parseDueDate()
       })

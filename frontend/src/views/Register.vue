@@ -1,8 +1,8 @@
 <template>
   <div class="columns is-tablet is-centered">
     <div class="box column is-6 is-5-desktop is-4-widescreen p-6">
-      <h1 class="is-size-2 mb-6">Log in</h1>
-      <form @submit.prevent="loginUser">
+      <h1 class="is-size-2 mb-6">Sign up</h1>
+      <form @submit.prevent="submitRegister">
         <b-field
           label="Name"
           horizontal>
@@ -27,7 +27,7 @@
           <button
             class="button is-primary"
             type="submit">
-            Log in
+            Sign up
           </button>
         </b-field>
       </form>
@@ -47,10 +47,10 @@ export default {
   },
   methods: {
     ...mapActions([
-      'login'
+      'register'
     ]),
-    loginUser () {
-      this.login({ username: this.username, password: this.password }).then(() => {
+    submitRegister () {
+      this.register({ username: this.username, password: this.password }).then(() => {
         this.$router.push({ name: 'Todos' })
       })
     }

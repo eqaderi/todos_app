@@ -62,7 +62,7 @@ export default {
     return {
       newTodo: {
         id: 'new',
-        createdAt: null,
+        createdAt: new Date(),
         color: '#673ab7',
         title: '',
         description: '',

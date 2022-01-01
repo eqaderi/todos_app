@@ -1,28 +1,12 @@
 <template>
-  <!-- <div class="container"> -->
   <b-navbar
     fixed-top
     wrapper-class="container">
-    <template #brand>
-      <b-navbar-item
-        tag="router-link"
-        :to="{ path: '/' }">
-        <img
-          src="@/assets/logo.svg"
-          alt="Todos app"
-          class="is-full-width">
-      </b-navbar-item>
-    </template>
     <template #start>
       <router-link
         class="navbar-item"
-        to="/">
-        Home
-      </router-link>
-      <router-link
-        class="navbar-item"
-        to="/about">
-        About
+        to="/todos">
+        Todos
       </router-link>
     </template>
 
@@ -30,18 +14,33 @@
       <b-navbar-item tag="div">
         <div class="buttons">
           <router-link
+            v-if="!currentUser.access_token && $route.name !== 'Register'"
             class="button is-primary is-rounded"
-            to="/signup">
+            to="/register">
             Sign up
           </router-link>
           <router-link
+            v-if="!currentUser.access_token && $route.name !== 'Login'"
             class="navbar-item button is-light is-rounded"
             to="/login">
             Log in
           </router-link>
+          <button
+            v-if="currentUser.access_token"
+            class="navbar-item button is-light is-rounded"
+            @click="logout">
+            Log out
+          </button>
         </div>
       </b-navbar-item>
     </template>
   </b-navbar>
-  <!-- </div> -->
 </template>
+
+<script>
+import { mapState, mapActions } from 'vuex'
+export default {
+  computed: mapState(['currentUser']),
+  methods: mapActions(['logout'])
+}
+</script>
