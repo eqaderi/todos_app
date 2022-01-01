@@ -9,5 +9,7 @@ Users then can create todos, edit them or delete them.
 There is also search functionality for the todos.
 
 The frontend has been developed using VueJS and the backend is created with Flask
+  
+It uses JSON Web Tokens (JWT) Authentication
 
 The app is very fun to use and full of animations.
